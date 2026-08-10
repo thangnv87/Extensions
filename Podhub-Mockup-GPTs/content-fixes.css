@@ -1,0 +1,12 @@
+#pmg-root .pmg-config:not(.hidden){max-height:58vh;overflow-y:auto}
+#pmg-root .pmg-config-section{display:flex;flex-direction:column;gap:6px;padding-top:4px;border-top:1px solid rgba(148,163,184,.16)}
+#pmg-root .pmg-config-section>b{color:#e2e8f0;font-size:10px}
+#pmg-root .pmg-config-section>b small{color:#64748b;font-weight:500}
+#pmg-root .pmg-check:has(input:checked){border-color:rgba(217,70,239,.75);background:rgba(217,70,239,.1)}
+#pmg-root .pmg-announcement{display:flex;flex-shrink:0;align-items:flex-start;gap:7px;margin:8px 10px 7px;padding:8px 9px;border:1px solid rgba(56,189,248,.35);border-radius:7px;background:rgba(56,189,248,.1);color:#bae6fd;font-weight:400}
+#pmg-root .pmg-announcement[hidden]{display:none}
+#pmg-root .pmg-announcement.success{border-color:#22c55e66;background:#22c55e14;color:#86efac}
+#pmg-root .pmg-announcement.warning{border-color:#f59e0b66;background:#f59e0b14;color:#fde68a}
+#pmg-root .pmg-announcement.danger{border-color:#ef444466;background:#ef444414;color:#fca5a5}
+#pmg-root .pmg-upload{font-weight:400}
+#pmg-root .pmg-upload button{height:30px;border:1px solid rgba(56,189,248,.5);border-radius:6px;background:rgba(56,189,248,.14);color:#7dd3fc;font-weight:400;cursor:pointer}

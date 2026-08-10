@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Podhub Mockup GPTs</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="logo">P</div>
+      <div><h1>Mockup GPTs</h1><p>Podhub AI Product Studio</p></div>
+    </header>
+    <div id="license-active" class="license-active" hidden></div>
+    <label id="license-label">Extension License Key</label>
+    <input id="license" type="password" placeholder="phb_ext_live_...">
+    <label>Tools API</label>
+    <input id="origin" type="url" value="https://tools.podhub.space">
+    <div id="actions" class="actions">
+      <button id="activate">Kích hoạt</button>
+      <button id="refresh" class="secondary">Làm mới</button>
+    </div>
+    <section id="status" class="status">Chưa kiểm tra license.</section>
+    <button id="open" class="open" disabled>Mở Mockup GPTs</button>
+    <p class="hint">Link Custom GPT và catalog sản phẩm được lấy từ backend trước mỗi job.</p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

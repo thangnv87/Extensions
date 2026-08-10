@@ -1,0 +1,146 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, Arial, sans-serif;
+  background: #07111f;
+  color: #e5edf7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 420px;
+  margin: 0;
+  background: #07111f;
+}
+
+.shell {
+  padding: 14px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+h1, h2, p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+p {
+  color: #9fb0c7;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+button {
+  min-height: 34px;
+  border: 1px solid rgba(94, 234, 212, .35);
+  border-radius: 7px;
+  background: #0f766e;
+  color: #f8fafc;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0d9488;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.activation {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 8px;
+  margin: 14px 0;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 8px;
+  background: #0b1628;
+}
+
+label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+input {
+  width: 100%;
+  height: 34px;
+  margin-top: 5px;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  border-radius: 7px;
+  background: #020817;
+  color: #f8fafc;
+  outline: none;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tab {
+  background: #111c31;
+  border-color: rgba(148, 163, 184, .24);
+}
+
+.tab.active {
+  background: #2563eb;
+  border-color: rgba(147, 197, 253, .5);
+}
+
+.panel {
+  display: none;
+  min-height: 196px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 8px;
+  background: #0b1628;
+}
+
+.panel.active {
+  display: block;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+
+.status {
+  min-height: 72px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 7px;
+  background: #020817;
+  color: #b7c5d8;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 1.45;
+}

@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Podhub GPT Bridge",
+  "version": "1.1.3",
+  "description": "Kết nối Custom GPTs, marketplace và quy trình team với trung tâm POD Podhub",
+  "permissions": ["clipboardWrite", "storage"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "http://localhost:3001/*",
+    "https://ex.podhub.space/*",
+    "https://www.ex.podhub.space/*",
+    "https://tools.podhub.space/*",
+    "https://www.etsy.com/*",
+    "https://*.etsystatic.com/*",
+    "https://www.amazon.com/*",
+    "https://*.media-amazon.com/*",
+    "https://gemini.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["team-routing.js", "chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.etsy.com/*"],
+      "js": ["team-routing.js", "marketplace-shared.js", "etsy.js", "etsy-grid.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.amazon.com/*"],
+      "js": ["team-routing.js", "marketplace-shared.js", "amazon.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["team-routing.js", "gemini.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

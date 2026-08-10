@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+release/
+*.zip
+*.zip.sha256
+*.crx
+*.pem
+*.log
+.env
+.env.*
+!.env.example

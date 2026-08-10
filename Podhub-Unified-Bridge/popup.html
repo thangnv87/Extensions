@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Podhub GPTs Bridge</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1>Podhub Bridge</h1>
+        <p id="licenseState">Checking license...</p>
+      </div>
+      <button id="refreshConfig" type="button" title="Refresh server config">Refresh</button>
+    </header>
+
+    <section id="activation" class="activation">
+      <label>
+        License key
+        <input id="licenseKey" type="password" placeholder="phb_live_...">
+      </label>
+      <button id="activate" type="button">Activate</button>
+    </section>
+
+    <nav class="tabs" aria-label="Podhub modules">
+      <button class="tab active" type="button" data-tab="clone">Clone</button>
+      <button class="tab" type="button" data-tab="redesign">Redesign</button>
+      <button class="tab" type="button" data-tab="mockup">Mockup</button>
+    </nav>
+
+    <section id="panel-clone" class="panel active">
+      <h2>Clone module</h2>
+      <p>Push a job and its mockup image to Custom GPT, then save returned images into Raw Clone.</p>
+      <div class="actions">
+        <button data-module="clone" data-action="open" type="button">Open GPT</button>
+        <button data-module="clone" data-action="start" type="button">Start next job</button>
+      </div>
+      <pre id="cloneStatus" class="status">Idle</pre>
+    </section>
+
+    <section id="panel-redesign" class="panel">
+      <h2>Redesign module</h2>
+      <p>Push a job, mockup image, and title to Custom GPT, then save returned images into Raw Redesign.</p>
+      <div class="actions">
+        <button data-module="redesign" data-action="open" type="button">Open GPT</button>
+        <button data-module="redesign" data-action="start" type="button">Start next job</button>
+      </div>
+      <pre id="redesignStatus" class="status">Idle</pre>
+    </section>
+
+    <section id="panel-mockup" class="panel">
+      <h2>Mockup module</h2>
+      <p>Push Raw Clone/Redesign into Custom GPT, then save returned images and JSON into Mockup and Design Library.</p>
+      <div class="actions">
+        <button data-module="mockup" data-action="open" type="button">Open GPT</button>
+        <button data-module="mockup" data-action="start" type="button">Start next job</button>
+      </div>
+      <pre id="mockupStatus" class="status">Idle</pre>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

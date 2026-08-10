@@ -1,0 +1,14 @@
+{
+  "name": "podhub-gpts-bridge",
+  "version": "0.1.9-1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:release",
+    "build:release": "node build-release.mjs",
+    "check": "node --check background.js && node --check popup.js && node --check content.js && node --check marketplace.js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "4.1.1"
+  }
+}

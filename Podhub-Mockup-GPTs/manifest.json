@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Podhub Mockup GPTs",
+  "version": "0.9.0",
+  "description": "Tạo mockup sản phẩm và listing JSON bằng Custom GPT, đồng bộ kết quả về Podhub.",
+  "permissions": ["storage", "tabs", "downloads"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://tools.podhub.space/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Podhub Mockup GPTs",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css", "content-fixes.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
