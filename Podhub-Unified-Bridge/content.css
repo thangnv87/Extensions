@@ -209,9 +209,23 @@
   gap: 6px;
 }
 
+
+.pub-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #334155 15%, #334155 85%, transparent);
+  margin: 14px 0 10px;
+}
+
+.pub-section-title {
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 4px 0 8px;
+}
+
 .pub-mockup-quick-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 58px;
+  grid-template-columns: 1fr 1fr;
   align-items: end;
   gap: 6px;
 }
@@ -254,6 +268,7 @@
   border-radius: 7px;
   background: #0f1a2e;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .pub-check.user-added {
@@ -263,22 +278,35 @@
 .pub-check-remove {
   width: 22px;
   height: 22px;
-  border: 1px solid #334155;
-  border-radius: 5px;
-  background: #101b2d;
-  color: #cbd5e1;
-  font-size: 12px;
-  font-weight: 900;
+  border: 1px solid transparent;
+  border-radius: 99px;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  display: grid;
+  place-content: center;
+  line-height: 1;
   cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
 }
 
 .pub-check-remove:hover {
-  border-color: var(--pub-neutral-border);
-  color: #e2e8f0;
+  background: #ef4444;
+  color: #fff;
+}
+
+.pub-check:hover .pub-check-remove {
+  opacity: 1;
 }
 
 .pub-check:hover {
-  border-color: var(--pub-neutral-border);
+  border-color: #475569;
+}
+
+.pub-check:active {
+  transform: scale(0.97);
 }
 
 .pub-check input {
@@ -325,8 +353,15 @@
   gap: 6px;
 }
 
-.pub-account-status {
+.pub-account-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 5px;
+}
+
+.pub-account-status {
+  flex: 1;
   color: #dbe6f3;
   font-size: 12px;
   line-height: 1.35;
@@ -335,6 +370,30 @@
 
 .pub-account-status.active {
   color: #86efac;
+}
+
+.pub-btn-logout {
+  display: none;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #991b1b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pub-btn-logout:hover {
+  background: #991b1b;
+  color: #fff;
+}
+
+#pub-root.license-active .pub-btn-logout {
+  display: inline-flex;
+  align-items: center;
 }
 
 #pub-root.license-active .pub-license-row {
@@ -942,4 +1001,56 @@
 
 #pub-floating-stop:active {
   transform: scale(.97);
+}
+
+/* 0.1.9-3-ui3: match spacing with the Podhub-Unified-Bridge UI. */
+.pub-btn-logout,
+#pub-root.license-active .pub-btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #101b2d;
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pub-btn-logout:hover,
+#pub-root.license-active .pub-btn-logout:hover {
+  border-color: #475569;
+  background: #17243a;
+  color: #ffffff;
+}
+
+[data-config-panel="mockup"] .pub-section-title {
+  margin: 4px 0 8px;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+[data-config-panel="mockup"] .pub-section-note {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+[data-config-panel="mockup"] .pub-mockup-quick-row {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0;
+}
+
+[data-config-panel="mockup"] .pub-mockup-quick-row [hidden] {
+  display: none !important;
+}
+
+[data-config-panel="mockup"] .pub-divider {
+  margin: 14px 0 10px;
 }

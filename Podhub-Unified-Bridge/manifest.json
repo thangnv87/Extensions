@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Podhub GPTs Bridge",
-  "version": "0.1.9.1",
+  "version": "0.1.9.3",
+  "version_name": "0.1.9-3-ui3",
   "description": "Unified Podhub browser bridge for Clone, Redesign, and Mockup modules.",
   "permissions": ["storage", "tabs", "downloads"],
   "host_permissions": [
@@ -28,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
-      "js": ["content.js"],
+      "js": ["content.js", "ui-fix.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     },

@@ -144,3 +144,32 @@ input {
   font-size: 11px;
   line-height: 1.45;
 }
+
+.deactivation {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 14px;
+}
+
+.btn-logout {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+}
+
+.btn-logout:hover {
+  background: #17243a;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+/* Keep logout consistent with the neutral action buttons in the extension UI. */
+.btn-logout {
+  background: #101b2d;
+  border-color: #334155;
+  color: #e2e8f0;
+}

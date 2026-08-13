@@ -16,7 +16,8 @@ const javascriptFiles = [
   'background.js',
   'popup.js',
   'content.js',
-  'marketplace.js'
+  'marketplace.js',
+  'ui-fix.js'
 ];
 const staticFiles = [
   'manifest.json',
@@ -135,14 +136,24 @@ for (const file of manifestFiles()) {
 
 fs.rmSync(zipPath, {force: true});
 fs.rmSync(checksumPath, {force: true});
-execFileSync('zip', ['-X', '-qr', zipPath, '.'], {cwd: releaseDir});
+if (process.platform === 'win32') {
+  const psQuote = value => `'${String(value).replaceAll("'", "''")}'`;
+  const command = `Compress-Archive -Path ${psQuote(path.join(releaseDir, '*'))} -DestinationPath ${psQuote(zipPath)} -CompressionLevel Optimal`;
+  execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command]);
+} else {
+  execFileSync('zip', ['-X', '-qr', zipPath, '.'], {cwd: releaseDir});
+}
 
 const checksum = sha256(zipPath);
 fs.writeFileSync(checksumPath, `${checksum}  ${zipName}\n`, 'utf8');
 
-const zipListing = execFileSync('unzip', ['-Z1', zipPath], {encoding: 'utf8'})
+const zipListing = execFileSync(
+  process.platform === 'win32' ? 'tar.exe' : 'unzip',
+  process.platform === 'win32' ? ['-tf', zipPath] : ['-Z1', zipPath],
+  {encoding: 'utf8'}
+)
   .trim()
-  .split('\n')
+  .split(/\r?\n/)
   .filter(Boolean);
 const expectedFiles = [...staticFiles, ...javascriptFiles].sort();
 if (JSON.stringify(zipListing.sort()) !== JSON.stringify(expectedFiles)) {
