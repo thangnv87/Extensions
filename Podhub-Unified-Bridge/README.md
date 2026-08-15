@@ -1,5 +1,14 @@
 # Podhub GPTs Bridge
 
+## Bridge v1 — v0.1.9.4
+
+- Extension chỉ gọi gateway `https://tools.podhub.space/api/bridge/v1` bằng access token của license.
+- Extension không nhận hoặc lưu Team token và không tự chọn server team.
+- Capability probe được cache 5 phút. Chỉ fallback route cũ khi gateway trả rõ `404` hoặc `CAPABILITY_NOT_SUPPORTED`/`BRIDGE_V1_DISABLED`.
+- Lỗi mạng hoặc `TEAM_SERVER_UNAVAILABLE` không fallback, nhằm tránh ghi trùng hoặc gửi dữ liệu sang server khác.
+- Các request ghi listing, claim, status, result và tạo mockup job đều có `Idempotency-Key` ổn định.
+- Source runtime nằm ở `background-source.js`; bản release tiếp tục được obfuscate và kiểm tra SHA-256 bởi `build-release.mjs`.
+
 Unified Chrome extension foundation for Podhub modules.
 
 ## Current modules

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Podhub GPTs Bridge",
-  "version": "0.1.9.3",
-  "version_name": "0.1.9-3-ui3",
+  "version": "0.1.9.4",
+  "version_name": "0.1.9-4-bridge-v1",
   "description": "Unified Podhub browser bridge for Clone, Redesign, and Mockup modules.",
   "permissions": ["storage", "tabs", "downloads"],
   "host_permissions": [
@@ -20,7 +20,7 @@
     "https://*.ssl-images-amazon.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "service-worker.js"
   },
   "action": {
     "default_title": "Podhub GPTs Bridge",

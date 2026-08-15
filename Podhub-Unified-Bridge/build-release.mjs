@@ -13,7 +13,9 @@ const zipName = `Podhub-GPTs-Bridge-v${manifest.version}.zip`;
 const zipPath = path.join(__dirname, zipName);
 const checksumPath = `${zipPath}.sha256`;
 const javascriptFiles = [
-  'background.js',
+  'service-worker.js',
+  'bridge-v1-client.js',
+  'background-source.js',
   'popup.js',
   'content.js',
   'marketplace.js',
