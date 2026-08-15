@@ -107,7 +107,7 @@ test('runtime mới không chứa Team token hoặc gọi trực tiếp server t
   assert.match(background, /\/api\/extension\/config\?bridge_gateway=1/);
   assert.match(worker, /importScripts\('bridge-v1-client\.js', 'background-source\.js'\)/);
   assert.equal(manifest.background.service_worker, 'service-worker.js');
-  assert.equal(manifest.version, '0.1.9.5');
+  assert.equal(manifest.version, '0.1.9.4');
   assert.match(background, /normalizedKey\.startsWith\('phb_ext_live_'\).*\/api\/extension\/activate/);
   assert.match(background, /normalizedKey\.startsWith\('phb_live_'\).*\/api\/license\/activate/);
   assert.doesNotMatch(background, /apiPost\('\/api\/license\/activate', body\)\.catch/);
@@ -134,7 +134,7 @@ test('service worker source khởi động được với Chrome MV3 API tối t
         remove: async keys => keys.forEach(key => delete saved[key])
       }},
       runtime: {
-        getManifest: () => ({version: '0.1.9.5'}),
+        getManifest: () => ({version: '0.1.9.4'}),
         onMessage: {addListener: callback => { listener = callback; }}
       },
       tabs: {create: async () => ({id: 1})}
@@ -191,7 +191,7 @@ test('extension key uses the correct endpoint and keeps activation after a tempo
         remove: async keys => keys.forEach(key => delete saved[key])
       }},
       runtime: {
-        getManifest: () => ({version: '0.1.9.5'}),
+        getManifest: () => ({version: '0.1.9.4'}),
         onMessage: {addListener: callback => { listener = callback; }}
       },
       tabs: {create: async () => ({id: 1})}
