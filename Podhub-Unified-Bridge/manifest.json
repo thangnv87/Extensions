@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Podhub GPTs Bridge",
-  "version": "0.1.9.4",
-  "version_name": "0.1.9-4-bridge-v1",
+  "version": "0.1.9.5",
+  "version_name": "0.1.9-5-activation-fix",
   "description": "Unified Podhub browser bridge for Clone, Redesign, and Mockup modules.",
   "permissions": ["storage", "tabs", "downloads"],
   "host_permissions": [

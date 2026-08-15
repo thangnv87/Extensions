@@ -154,22 +154,27 @@ async function getOrCreateInstallationId() {
 }
 
 async function activate(licenseKey) {
+  const normalizedKey = String(licenseKey || '').trim();
   const id = await getOrCreateInstallationId();
   const body = {
-    license_key: String(licenseKey || '').trim(), installation_id: id,
+    license_key: normalizedKey, installation_id: id,
     bridge_gateway: true,
     app_name: 'Podhub GPTs Bridge', extension_version: chrome.runtime.getManifest().version,
     browser_name: navigator.userAgent.includes('Edg/') ? 'Edge' : 'Chrome',
     browser_version: navigator.userAgent, os: navigator.platform
   };
-  const payload = await apiPost('/api/license/activate', body).catch(() => apiPost('/api/extension/activate', body));
+  let activationPath;
+  if (normalizedKey.startsWith('phb_ext_live_')) activationPath = '/api/extension/activate';
+  else if (normalizedKey.startsWith('phb_live_')) activationPath = '/api/license/activate';
+  else throw new Error('LICENSE_FORMAT_INVALID');
+  const payload = await apiPost(activationPath, body);
   const token = payload.access_token || payload.token;
   if (!token) throw new Error('Activation did not return an access token.');
   const safePayload = sanitizeGatewayPayload(payload);
   await storageSet({[STORAGE.token]: token, [STORAGE.user]: safePayload.user || null});
   await bridge.clearProbe();
-  await refreshConfig();
-  return safePayload;
+  const configRefreshed = await refreshConfig().then(() => true, () => false);
+  return {...safePayload, config_refreshed: configRefreshed};
 }
 
 async function deactivate() {
@@ -180,15 +185,9 @@ async function deactivate() {
 }
 
 async function refreshConfig() {
-  let config = {};
-  try {
-    config = await api('/api/extension/config?bridge_gateway=1', {
-      headers: {'X-Podhub-Bridge-Client': 'bridge_api_v1'}
-    });
-  } catch {
-    const saved = await storageGet([STORAGE.token]);
-    config = await apiPost('/api/license/introspect', {access_token: saved[STORAGE.token]});
-  }
+  const config = await api('/api/extension/config?bridge_gateway=1', {
+    headers: {'X-Podhub-Bridge-Client': 'bridge_api_v1'}
+  });
   const safeConfig = sanitizeGatewayPayload(config);
   const normalized = {...safeConfig, modules: normalizeModules(safeConfig)};
   await storageSet({[STORAGE.config]: normalized});

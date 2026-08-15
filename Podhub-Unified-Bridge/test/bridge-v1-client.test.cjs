@@ -107,7 +107,10 @@ test('runtime mới không chứa Team token hoặc gọi trực tiếp server t
   assert.match(background, /\/api\/extension\/config\?bridge_gateway=1/);
   assert.match(worker, /importScripts\('bridge-v1-client\.js', 'background-source\.js'\)/);
   assert.equal(manifest.background.service_worker, 'service-worker.js');
-  assert.equal(manifest.version, '0.1.9.4');
+  assert.equal(manifest.version, '0.1.9.5');
+  assert.match(background, /normalizedKey\.startsWith\('phb_ext_live_'\).*\/api\/extension\/activate/);
+  assert.match(background, /normalizedKey\.startsWith\('phb_live_'\).*\/api\/license\/activate/);
+  assert.doesNotMatch(background, /apiPost\('\/api\/license\/activate', body\)\.catch/);
 });
 
 test('service worker source khởi động được với Chrome MV3 API tối thiểu', async () => {
@@ -131,7 +134,7 @@ test('service worker source khởi động được với Chrome MV3 API tối t
         remove: async keys => keys.forEach(key => delete saved[key])
       }},
       runtime: {
-        getManifest: () => ({version: '0.1.9.4'}),
+        getManifest: () => ({version: '0.1.9.5'}),
         onMessage: {addListener: callback => { listener = callback; }}
       },
       tabs: {create: async () => ({id: 1})}
@@ -151,4 +154,63 @@ test('service worker source khởi động được với Chrome MV3 API tối t
   assert.equal(response.ok, true);
   assert.equal(response.data.active, false);
   assert.equal(response.data.bridge_mode, 'unknown');
+});
+
+test('extension key uses the correct endpoint and keeps activation after a temporary config failure', async () => {
+  const saved = {};
+  const calls = [];
+  let listener;
+  const workerScope = {
+    Blob,
+    FormData,
+    URL,
+    URLSearchParams,
+    TextEncoder,
+    crypto,
+    navigator: {userAgent: 'Chrome/140', platform: 'Win32'},
+    fetch: async (url, options = {}) => {
+      calls.push({url, options});
+      if (url.endsWith('/api/extension/activate')) {
+        return new Response(JSON.stringify({success: true, data: {access_token: 'test-token', user: {username: 'canary'}}}), {
+          status: 200,
+          headers: {'content-type': 'application/json'}
+        });
+      }
+      if (url.includes('/api/extension/config')) {
+        return new Response(JSON.stringify({success: false, error: 'CONFIG_TEMPORARY_ERROR'}), {
+          status: 503,
+          headers: {'content-type': 'application/json'}
+        });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    },
+    chrome: {
+      storage: {local: {
+        get: async keys => Object.fromEntries(keys.map(key => [key, saved[key]])),
+        set: async values => Object.assign(saved, values),
+        remove: async keys => keys.forEach(key => delete saved[key])
+      }},
+      runtime: {
+        getManifest: () => ({version: '0.1.9.5'}),
+        onMessage: {addListener: callback => { listener = callback; }}
+      },
+      tabs: {create: async () => ({id: 1})}
+    }
+  };
+  workerScope.globalThis = workerScope;
+  vm.runInNewContext(source, workerScope, {filename: 'bridge-v1-client.js'});
+  vm.runInNewContext(
+    fs.readFileSync(path.resolve(__dirname, '../background-source.js'), 'utf8'),
+    workerScope,
+    {filename: 'background-source.js'}
+  );
+
+  const response = await new Promise(resolve => {
+    assert.equal(listener({type: 'PUB_ACTIVATE', licenseKey: `phb_ext_live_${'a'.repeat(30)}`}, {}, resolve), true);
+  });
+  assert.equal(response.ok, true);
+  assert.equal(response.data.config_refreshed, false);
+  assert.equal(saved.pub_license_token, 'test-token');
+  assert.equal(calls[0].url, 'https://tools.podhub.space/api/extension/activate');
+  assert.equal(calls.some(call => call.url.endsWith('/api/license/activate')), false);
 });

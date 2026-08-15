@@ -1,6 +1,6 @@
 {
   "name": "podhub-gpts-bridge",
-  "version": "0.1.9-4-bridge-v1",
+  "version": "0.1.9-5-activation-fix",
   "private": true,
   "type": "module",
   "scripts": {
