@@ -39,12 +39,14 @@ test('chuẩn hóa listing cũ sang contract Bridge v1 mà không mất payload 
     external_id: 'etsy-100',
     title: 'Listing thử',
     product_url: 'https://www.etsy.com/listing/100',
+    requested_workflows: ['clone', 'mockup'],
     raw_payload: {captured_at: '2026-08-15T00:00:00.000Z', tags: ['pod']}
   };
   const output = bridgeModule.marketplaceListing(input);
   assert.equal(output.source, 'etsy');
   assert.equal(output.source_listing_id, 'etsy-100');
   assert.equal(output.captured_at, '2026-08-15T00:00:00.000Z');
+  assert.equal(JSON.stringify(output.requested_workflows), JSON.stringify(['clone', 'mockup']));
   assert.equal(JSON.stringify(output.listing), JSON.stringify(input));
 });
 
@@ -85,6 +87,7 @@ test('canonical writes luôn có idempotency key ổn định', async () => {
   for (const call of harness.calls) {
     assert.match(call.options.headers['Idempotency-Key'], /^ext-v1:/);
   }
+  assert.match(harness.calls[0].options.headers['Idempotency-Key'], /^ext-v1:listing-v2:/);
 });
 
 test('hai listing result khác nhau không dùng trùng idempotency key', async () => {
@@ -111,6 +114,8 @@ test('runtime mới không chứa Team token hoặc gọi trực tiếp server t
   assert.match(background, /normalizedKey\.startsWith\('phb_ext_live_'\).*\/api\/extension\/activate/);
   assert.match(background, /normalizedKey\.startsWith\('phb_live_'\).*\/api\/license\/activate/);
   assert.doesNotMatch(background, /apiPost\('\/api\/license\/activate', body\)\.catch/);
+  assert.match(background, /requestedWorkflows = \['clone', 'redesign', 'mockup'\]/);
+  assert.match(background, /enabled !== false/);
 });
 
 test('service worker source khởi động được với Chrome MV3 API tối thiểu', async () => {

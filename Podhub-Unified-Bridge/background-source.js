@@ -340,7 +340,12 @@ async function deleteJobs(moduleId, jobIds) {
 }
 
 async function saveMarketplaceListing(payload) {
-  if (await bridge.probe()) return bridge.saveMarketplaceListing(payload);
+  if (await bridge.probe()) {
+    const state = await getState();
+    const requestedWorkflows = ['clone', 'redesign', 'mockup']
+      .filter(moduleId => state.config?.modules?.[moduleId]?.enabled !== false);
+    return bridge.saveMarketplaceListing({...payload, requested_workflows: requestedWorkflows});
+  }
   return apiPost('/api/extension/marketplace-listings', payload);
 }
 

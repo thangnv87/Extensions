@@ -128,7 +128,7 @@
         return write(
           `${BASE_PATH}/marketplace/listings`,
           body,
-          idempotencyKey('listing', `${body.source}:${body.source_listing_id}`)
+          idempotencyKey('listing-v2', `${body.source}:${body.source_listing_id}`)
         );
       },
       queueMockups: (assetIds, options, installationId) => Promise.all(
