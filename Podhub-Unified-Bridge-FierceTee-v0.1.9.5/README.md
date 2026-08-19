@@ -26,7 +26,8 @@ phải từ dòng Podhub GPT Bridge `1.1.x`.
 
 ## Bridge v1
 
-- Extension chỉ gọi gateway `https://tools.podhub.space/api/bridge/v1` bằng access token của license.
+- `tools.podhub.space` chỉ dùng làm control plane để kích hoạt key và lấy cấu hình/routing.
+- Listing, job, ảnh và trạng thái chạy được gửi trực tiếp tới data plane `https://api.fiercetee.com` bằng team token ngắn hạn.
 - Extension không nhận hoặc lưu Team token và không tự chọn server team.
 - Capability probe được cache 5 phút. Chỉ fallback route cũ khi gateway trả rõ `404` hoặc `CAPABILITY_NOT_SUPPORTED`/`BRIDGE_V1_DISABLED`.
 - Lỗi mạng hoặc `TEAM_SERVER_UNAVAILABLE` không fallback, nhằm tránh ghi trùng hoặc gửi dữ liệu sang server khác.
@@ -43,7 +44,7 @@ Unified Chrome extension foundation for Podhub modules.
 
 ## Server-owned config
 
-The extension expects GPT links and optional module endpoint overrides from `https://tools.podhub.space`.
+The extension reads GPT links and entitlement config from `https://tools.podhub.space`, while all workflow data is stored by `https://api.fiercetee.com`.
 
 Recommended module config shape:
 

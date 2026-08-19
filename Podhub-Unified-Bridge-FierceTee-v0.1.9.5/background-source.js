@@ -1,6 +1,6 @@
 'use strict';
 
-const TOOLS_ORIGIN = 'https://tools.podhub.space';
+const CONTROL_ORIGIN = 'https://tools.podhub.space';
 const PARTNER_POLICY = Object.freeze({
   teamName: 'fiercetee',
   dataOrigin: 'https://api.fiercetee.com'
@@ -12,6 +12,7 @@ const STORAGE = {
   installation: 'pub_installation_id',
   config: 'pub_runtime_config',
   activeRun: 'pub_active_run'
+  ,routing: 'pub_team_routing'
 };
 
 const MODULE_DEFAULTS = {
@@ -60,23 +61,69 @@ const MODULE_ALIASES = {
 const storageGet = keys => chrome.storage.local.get(keys);
 const storageSet = value => chrome.storage.local.set(value);
 
-async function api(path, options = {}) {
-  const saved = await storageGet([STORAGE.token]);
+const CONTROL_PATHS = new Set([
+  '/api/extension/activate',
+  '/api/license/activate',
+  '/api/extension/config',
+  '/api/extension/routing'
+]);
+
+function isControlPath(path) {
+  return [...CONTROL_PATHS].some(prefix => String(path || '').split('?')[0] === prefix);
+}
+
+function partnerRouting(routing) {
+  assertPartnerRouting(routing);
+  return {
+    team_id: routing.team_id || null,
+    team_name: routing.team_name || PARTNER_POLICY.teamName,
+    data_origin: new URL(String(routing.api_base_url)).origin,
+    team_access_token: String(routing.team_access_token || ''),
+    config_version: Number(routing.config_version || 1),
+    refreshed_at: new Date().toISOString()
+  };
+}
+
+async function refreshPartnerRouting(accessToken) {
+  const response = await fetch(CONTROL_ORIGIN + '/api/extension/routing', {
+    headers: {
+      Authorization: 'Bearer ' + accessToken,
+      'X-Podhub-Request-Id': `ext_${crypto.randomUUID()}`
+    }
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload?.success === false) throw new Error(payload?.error || `ROUTING_HTTP_${response.status}`);
+  const routing = partnerRouting(payload.data?.routing || payload.routing);
+  if (!routing.team_access_token) throw new Error('FIERCETEE_TEAM_TOKEN_MISSING');
+  await storageSet({[STORAGE.routing]: routing});
+  return routing;
+}
+
+async function api(path, options = {}, allowRoutingRefresh = true) {
+  const saved = await storageGet([STORAGE.token, STORAGE.routing]);
   const token = String(saved[STORAGE.token] || '');
+  const controlRequest = isControlPath(path);
+  const routing = saved[STORAGE.routing] || {};
+  const origin = controlRequest ? CONTROL_ORIGIN : String(routing.data_origin || PARTNER_POLICY.dataOrigin);
   const rawBody = options.body;
   const isJsonBody = rawBody !== undefined && rawBody !== null &&
     !(rawBody instanceof Blob) && !(rawBody instanceof FormData) && typeof rawBody !== 'string';
-  const response = await fetch(TOOLS_ORIGIN + path, {
+  const response = await fetch(origin + path, {
     ...options,
     body: isJsonBody ? JSON.stringify(rawBody) : rawBody,
     headers: {
       ...((isJsonBody || typeof rawBody === 'string') ? {'Content-Type': 'application/json'} : {}),
-      ...(token ? {Authorization: 'Bearer ' + token} : {}),
+      ...(controlRequest && token ? {Authorization: 'Bearer ' + token} : {}),
+      ...(!controlRequest && routing.team_access_token ? {'X-Podhub-Team-Token': routing.team_access_token} : {}),
       'X-Podhub-Request-Id': options.requestId || `ext_${crypto.randomUUID()}`,
       ...(options.headers || {})
     }
   });
   const payload = await response.json().catch(() => ({}));
+  if (!controlRequest && response.status === 401 && token && allowRoutingRefresh) {
+    await refreshPartnerRouting(token);
+    return api(path, options, false);
+  }
   if (!response.ok || payload?.success === false) {
     const error = new Error(payload?.message || payload?.error || `HTTP_${response.status}`);
     error.code = payload?.error || `HTTP_${response.status}`;
@@ -185,7 +232,8 @@ async function activate(licenseKey) {
   else if (normalizedKey.startsWith('phb_live_')) activationPath = '/api/license/activate';
   else throw new Error('LICENSE_FORMAT_INVALID');
   const payload = await apiPost(activationPath, body);
-  assertPartnerRouting(payload.routing);
+  const routing = partnerRouting(payload.routing);
+  if (!routing.team_access_token) throw new Error('FIERCETEE_TEAM_TOKEN_MISSING');
   const token = payload.access_token || payload.token;
   if (!token) throw new Error('Activation did not return an access token.');
   const safePayload = sanitizeGatewayPayload(payload);
@@ -197,7 +245,7 @@ async function activate(licenseKey) {
     ? `${normalizedKey.slice(0, 12)}••••${normalizedKey.slice(-4)}`
     : 'Đã kích hoạt';
   const license = {...(safePayload.license || {}), masked_key: safePayload.license?.masked_key || maskedKey};
-  await storageSet({[STORAGE.token]: token, [STORAGE.user]: activatedUser, [STORAGE.license]: license});
+  await storageSet({[STORAGE.token]: token, [STORAGE.user]: activatedUser, [STORAGE.license]: license, [STORAGE.routing]: routing});
   await bridge.clearProbe();
   const configRefreshed = await refreshConfig().then(() => true, () => false);
   return {...safePayload, config_refreshed: configRefreshed};
@@ -205,7 +253,7 @@ async function activate(licenseKey) {
 
 async function deactivate() {
   await chrome.storage.local.remove([
-    STORAGE.token, STORAGE.user, STORAGE.license, STORAGE.config, STORAGE.activeRun, globalThis.PodhubBridgeV1.STATE_KEY
+    STORAGE.token, STORAGE.user, STORAGE.license, STORAGE.config, STORAGE.activeRun, STORAGE.routing, globalThis.PodhubBridgeV1.STATE_KEY
   ]);
   return {deactivated: true};
 }
@@ -214,7 +262,8 @@ async function refreshConfig() {
   const config = await api('/api/extension/config?bridge_gateway=1', {
     headers: {'X-Podhub-Bridge-Client': 'bridge_api_v1'}
   });
-  assertPartnerRouting(config.routing);
+  const routing = partnerRouting(config.routing);
+  if (!routing.team_access_token) throw new Error('FIERCETEE_TEAM_TOKEN_MISSING');
   const safeConfig = sanitizeGatewayPayload(config);
   const normalized = {...safeConfig, modules: normalizeModules(safeConfig)};
   const saved = await storageGet([STORAGE.user, STORAGE.license]);
@@ -222,6 +271,7 @@ async function refreshConfig() {
   const license = safeConfig.license && typeof safeConfig.license === 'object' ? safeConfig.license : null;
   await storageSet({
     [STORAGE.config]: normalized,
+    [STORAGE.routing]: routing,
     ...(account ? {[STORAGE.user]: {...(saved[STORAGE.user] || {}), ...account}} : {}),
     ...(license ? {[STORAGE.license]: {...(saved[STORAGE.license] || {}), ...license}} : {})
   });
@@ -286,11 +336,17 @@ async function fetchAsset(message) {
     url = `/api/extension/assets/${encodeURIComponent(source.asset_id)}/content`;
     authenticated = true;
   }
-  const saved = await storageGet([STORAGE.token]);
-  const response = await fetch(authenticated ? TOOLS_ORIGIN + url : url, {
+  const saved = await storageGet([STORAGE.token, STORAGE.routing]);
+  let routing = saved[STORAGE.routing] || {};
+  const requestAsset = () => fetch(authenticated ? String(routing.data_origin || PARTNER_POLICY.dataOrigin) + url : url, {
     credentials: authenticated ? 'same-origin' : 'include',
-    headers: authenticated && saved[STORAGE.token] ? {Authorization: 'Bearer ' + saved[STORAGE.token]} : {}
+    headers: authenticated && routing.team_access_token ? {'X-Podhub-Team-Token': routing.team_access_token} : {}
   });
+  let response = await requestAsset();
+  if (authenticated && response.status === 401 && saved[STORAGE.token]) {
+    routing = await refreshPartnerRouting(saved[STORAGE.token]);
+    response = await requestAsset();
+  }
   if (!response.ok) throw new Error(`ASSET_HTTP_${response.status}`);
   const blob = await response.blob();
   return {

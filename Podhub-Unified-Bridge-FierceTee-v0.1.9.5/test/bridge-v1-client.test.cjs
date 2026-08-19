@@ -100,11 +100,13 @@ test('hai listing result khác nhau không dùng trùng idempotency key', async 
   );
 });
 
-test('runtime mới không chứa Team token hoặc gọi trực tiếp server team', () => {
+test('runtime tách control plane và data plane FierceTee', () => {
   const background = fs.readFileSync(path.resolve(__dirname, '../background-source.js'), 'utf8');
   const worker = fs.readFileSync(path.resolve(__dirname, '../service-worker.js'), 'utf8');
   const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json'), 'utf8'));
-  assert.equal(background.includes('X-Podhub-Team-Token'), false);
+  assert.equal(background.includes('X-Podhub-Team-Token'), true);
+  assert.match(background, /data_origin/);
+  assert.match(background, /PARTNER_POLICY\.dataOrigin/);
   assert.equal(background.includes('ex.podhub.space'), false);
   assert.match(background, /delete safe\.team_access_token/);
   assert.match(background, /\/api\/extension\/config\?bridge_gateway=1/);
@@ -187,7 +189,7 @@ test('extension key uses the correct endpoint and keeps activation after a tempo
         return new Response(JSON.stringify({success: true, data: {
           access_token: 'test-token',
           user: {username: 'canary'},
-          routing: {team_name: 'Fiercetee', api_base_url: 'https://api.fiercetee.com'}
+          routing: {team_name: 'Fiercetee', api_base_url: 'https://api.fiercetee.com', team_access_token: 'team-token'}
         }}), {
           status: 200,
           headers: {'content-type': 'application/json'}
@@ -228,6 +230,8 @@ test('extension key uses the correct endpoint and keeps activation after a tempo
   assert.equal(response.ok, true);
   assert.equal(response.data.config_refreshed, false);
   assert.equal(saved.pub_license_token, 'test-token');
+  assert.equal(saved.pub_team_routing.data_origin, 'https://api.fiercetee.com');
+  assert.equal(saved.pub_team_routing.team_access_token, 'team-token');
   assert.equal(calls[0].url, 'https://tools.podhub.space/api/extension/activate');
   assert.equal(calls.some(call => call.url.endsWith('/api/license/activate')), false);
 });
