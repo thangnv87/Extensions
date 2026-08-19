@@ -1,0 +1,13 @@
+{
+  "name": "fiercetee-team-bridge",
+  "version": "1.0.0",
+  "description": "FierceTee Team Bridge - dedicated secure commercial extension build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-release.mjs"
+  },
+  "dependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  }
+}

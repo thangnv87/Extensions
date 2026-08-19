@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "FierceTee Team Bridge",
+  "version": "1.0.0",
+  "version_name": "FierceTee Team 1.0",
+  "description": "Bản Podhub Bridge riêng cho team FierceTee, kết nối dữ liệu với api.fiercetee.com",
+  "permissions": ["clipboardWrite", "storage"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "http://localhost:3001/*",
+    "https://ex.podhub.space/*",
+    "https://www.ex.podhub.space/*",
+    "https://tools.podhub.space/*",
+    "https://api.fiercetee.com/*",
+    "https://www.etsy.com/*",
+    "https://*.etsystatic.com/*",
+    "https://www.amazon.com/*",
+    "https://*.media-amazon.com/*",
+    "https://gemini.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["team-routing.js", "chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.etsy.com/*"],
+      "js": ["team-routing.js", "marketplace-shared.js", "etsy.js", "etsy-grid.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.amazon.com/*"],
+      "js": ["team-routing.js", "marketplace-shared.js", "amazon.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["team-routing.js", "gemini.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
