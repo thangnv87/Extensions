@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  const PRICING_URL = "https://tools.podhub.space/pricing";
+  let isSyncing = false;
+  let isApplying = false;
+
   const make = (className, text) => {
     const element = document.createElement("div");
     element.className = className;
@@ -113,33 +117,241 @@
     return true;
   }
 
-  function applyUiFix() {
+  // --- UPSELL MODAL ---
+  function showUpsellModal(tabId, planName) {
     const root = document.querySelector("#pub-root");
     if (!root) return;
 
-    const activateButton = root.querySelector('[data-action="activate"]');
-    if (activateButton) {
-      activateButton.textContent = "Kích hoạt";
-      activateButton.title = "Kích hoạt license Podhub";
-    }
+    root.querySelector(".pub-upsell-backdrop")?.remove();
 
-    const logoutButton = root.querySelector('[data-action="deactivate"]');
-    if (logoutButton) {
-      logoutButton.textContent = "Đăng xuất";
-      logoutButton.classList.add("pub-btn", "secondary", "pub-btn-logout");
-      logoutButton.title = "Đăng xuất khỏi tài khoản Podhub";
-    }
+    const moduleNames = {
+      clone: "Clone GPTs",
+      redesign: "Redesign GPTs",
+      mockup: "Mockup GPTs"
+    };
+    const targetModuleName = moduleNames[tabId] || tabId;
+    const currentPlanText = planName || "Clone GPTs";
 
-    root.querySelectorAll('.pub-field-row [data-action="save-settings"]').forEach(button => {
-      if (!button.closest(".pub-config-panel")) button.textContent = "Lưu";
+    const backdrop = document.createElement("div");
+    backdrop.className = "pub-upsell-backdrop";
+    backdrop.innerHTML = `
+      <div class="pub-upsell-modal">
+        <div class="pub-upsell-icon">🔒</div>
+        <h3 class="pub-upsell-title">Mở khóa ${targetModuleName}</h3>
+        <p class="pub-upsell-desc">Gói của bạn gồm: <b>${currentPlanText}</b> — Nâng cấp Pro để mở khóa toàn bộ.</p>
+        <div class="pub-upsell-actions">
+          <button type="button" class="pub-btn-pricing">Xem bảng giá nâng cấp →</button>
+          <button type="button" class="pub-btn-close-modal">Đóng</button>
+        </div>
+      </div>
+    `;
+
+    backdrop.querySelector(".pub-btn-pricing")?.addEventListener("click", () => {
+      window.open(PRICING_URL, "_blank");
+      backdrop.remove();
     });
 
-    const redesignReady = arrangeRedesign(root.querySelector('[data-config-panel="redesign"]'));
-    const mockupReady = arrangeMockup(root.querySelector('[data-config-panel="mockup"]'));
-    if (redesignReady && mockupReady) observer.disconnect();
+    backdrop.querySelector(".pub-btn-close-modal")?.addEventListener("click", () => {
+      backdrop.remove();
+    });
+
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) backdrop.remove();
+    });
+
+    root.appendChild(backdrop);
   }
 
-  const observer = new MutationObserver(applyUiFix);
+  // --- LOCK AND LICENSE STATE SYNC (SAFE & DEBOUNCED) ---
+  async function syncLicenseAndLockStates() {
+    if (isSyncing) return;
+    isSyncing = true;
+
+    try {
+      const root = document.querySelector("#pub-root");
+      if (!root || typeof chrome === "undefined" || !chrome.storage?.local) return;
+
+      const data = await chrome.storage.local.get([
+        "pub_license_token",
+        "pub_license_user",
+        "pub_runtime_config"
+      ]);
+
+      const token = data.pub_license_token;
+      const user = data.pub_license_user;
+      const config = data.pub_runtime_config;
+
+      // 1. Determine allowed modules & Plan Name
+      const modulesConfig = config?.modules || {};
+      let allowedModules = [];
+
+      const rawModules = user?.allowed_modules || user?.modules || config?.allowed_modules || [];
+      const planId = String(user?.plan_id || "").toLowerCase();
+
+      if (Array.isArray(rawModules) && rawModules.length > 0) {
+        if (rawModules.includes("all") || rawModules.length >= 3) {
+          allowedModules = ["clone", "redesign", "mockup"];
+        } else {
+          allowedModules = rawModules.map(m => {
+            const s = String(m).toLowerCase();
+            if (s.includes("clone")) return "clone";
+            if (s.includes("redesign")) return "redesign";
+            if (s.includes("mockup")) return "mockup";
+            return s;
+          });
+        }
+      } else if (config?.modules) {
+        for (const [key, m] of Object.entries(modulesConfig)) {
+          if (m && (m.enabled === true || m.allowed === true)) {
+            allowedModules.push(key);
+          }
+        }
+      }
+
+      if (token && allowedModules.length === 0) {
+        allowedModules = ["clone"];
+      }
+
+      let currentPlanName = user?.plan_name || "POD Pro Bundle";
+      if (!user?.plan_name) {
+        if (allowedModules.includes("clone") && allowedModules.includes("redesign") && allowedModules.includes("mockup")) {
+          currentPlanName = planId.includes("studio") ? "POD Studio" : "POD Pro Bundle";
+        } else if (allowedModules.includes("clone")) {
+          currentPlanName = "Clone GPTs";
+        } else if (allowedModules.includes("redesign")) {
+          currentPlanName = "Redesign GPTs";
+        } else if (allowedModules.includes("mockup")) {
+          currentPlanName = "Mockup GPTs";
+        }
+      }
+
+      // 2. Sync Active state & Formatted Account String
+      const statusEl = root.querySelector(".pub-account-status");
+      const userIdentifier = user?.email || user?.username || "Tài khoản Podhub";
+      if (token) {
+        if (!root.classList.contains("license-active")) root.classList.add("license-active");
+        if (statusEl) {
+          if (!statusEl.classList.contains("active")) statusEl.classList.add("active");
+          const targetText = `${currentPlanName} · Active · ${userIdentifier}`;
+          if (statusEl.textContent !== targetText) statusEl.textContent = targetText;
+        }
+      } else {
+        if (root.classList.contains("license-active")) root.classList.remove("license-active");
+        if (statusEl) {
+          if (statusEl.classList.contains("active")) statusEl.classList.remove("active");
+          if (statusEl.textContent !== "Chưa kích hoạt license") statusEl.textContent = "Chưa kích hoạt license";
+        }
+      }
+
+      // 3. Attach Lock Icons & Interceptors to Tabs
+      const tabs = root.querySelectorAll(".pub-tabs .pub-tab, .pub-tab");
+      tabs.forEach(tab => {
+        const text = tab.textContent.replace(/🔒/g, "").trim().toLowerCase();
+        let tabModule = "";
+        if (text.includes("clone")) tabModule = "clone";
+        else if (text.includes("redesign")) tabModule = "redesign";
+        else if (text.includes("mockup")) tabModule = "mockup";
+        if (!tabModule) return;
+
+        const isAllowed = !token || allowedModules.includes(tabModule);
+
+        if (!isAllowed) {
+          if (!tab.classList.contains("pub-tab-locked")) tab.classList.add("pub-tab-locked");
+          if (!tab.querySelector(".pub-lock-icon")) {
+            const lockIcon = document.createElement("span");
+            lockIcon.className = "pub-lock-icon";
+            lockIcon.textContent = "🔒";
+            tab.appendChild(lockIcon);
+          }
+
+          if (!tab.dataset.lockListenerAttached) {
+            tab.dataset.lockListenerAttached = "1";
+            tab.addEventListener(
+              "click",
+              (e) => {
+                if (tab.classList.contains("pub-tab-locked")) {
+                  e.preventDefault();
+                  e.stopImmediatePropagation();
+                  if (e.target && e.target.classList.contains("pub-lock-icon")) {
+                    showUpsellModal(tabModule, currentPlanName);
+                  }
+                }
+              },
+              true
+            );
+          }
+        } else {
+          if (tab.classList.contains("pub-tab-locked")) tab.classList.remove("pub-tab-locked");
+          tab.querySelector(".pub-lock-icon")?.remove();
+        }
+      });
+    } finally {
+      isSyncing = false;
+    }
+  }
+
+  function applyUiFix() {
+    if (isApplying) return;
+    isApplying = true;
+
+    try {
+      const root = document.querySelector("#pub-root");
+      if (!root) return;
+
+      const activateButton = root.querySelector('[data-action="activate"]');
+      if (activateButton && activateButton.textContent !== "Kích hoạt") {
+        activateButton.textContent = "Kích hoạt";
+        activateButton.title = "Kích hoạt license Podhub";
+      }
+
+      const logoutButton = root.querySelector('[data-action="deactivate"]');
+      if (logoutButton && logoutButton.textContent !== "Đăng xuất") {
+        logoutButton.textContent = "Đăng xuất";
+        logoutButton.classList.add("pub-btn", "secondary", "pub-btn-logout");
+        logoutButton.title = "Đăng xuất khỏi tài khoản Podhub";
+      }
+
+      root.querySelectorAll('.pub-field-row [data-action="save-settings"]').forEach(button => {
+        if (!button.closest(".pub-config-panel") && button.textContent !== "Lưu") button.textContent = "Lưu";
+      });
+
+      const redesignReady = arrangeRedesign(root.querySelector('[data-config-panel="redesign"]'));
+      const mockupReady = arrangeMockup(root.querySelector('[data-config-panel="mockup"]'));
+
+      syncLicenseAndLockStates().catch(() => {});
+
+      if (redesignReady && mockupReady) {
+        observer.disconnect();
+      }
+    } finally {
+      isApplying = false;
+    }
+  }
+
+  // --- STORAGE & RUNTIME LISTENERS ---
+  if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local") {
+        if (changes.pub_license_token || changes.pub_license_user || changes.pub_runtime_config) {
+          syncLicenseAndLockStates().catch(() => {});
+        }
+      }
+    });
+  }
+
+  if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message?.type === "PUB_LICENSE_UPDATED" || message?.type === "LICENSE_UPDATED") {
+        syncLicenseAndLockStates().catch(() => {});
+      }
+    });
+  }
+
+  // Observe only until #pub-root is attached and configured, then disconnect
+  const observer = new MutationObserver(() => {
+    applyUiFix();
+  });
+
   observer.observe(document.documentElement, { childList: true, subtree: true });
   applyUiFix();
 })();
