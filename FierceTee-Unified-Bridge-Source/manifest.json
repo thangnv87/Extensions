@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "FierceTee GPTs Bridge",
+  "version": "0.1.9.5",
+  "version_name": "0.1.9-5-stable-queue-sync",
+  "description": "Unified FierceTee browser bridge for Clone, Redesign, and Mockup modules.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://api.fiercetee.com/*",
+    "https://fiercetee.com/*",
+    "https://www.fiercetee.com/*",
+    "https://www.etsy.com/*",
+    "https://*.etsy.com/*",
+    "https://*.etsystatic.com/*",
+    "https://www.amazon.com/*",
+    "https://*.amazon.com/*",
+    "https://*.media-amazon.com/*",
+    "https://*.ssl-images-amazon.com/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "FierceTee GPTs Bridge",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "content.js",
+        "ui-fix.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.etsy.com/*",
+        "https://*.etsy.com/*",
+        "https://www.amazon.com/*",
+        "https://*.amazon.com/*"
+      ],
+      "js": [
+        "marketplace.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

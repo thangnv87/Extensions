@@ -1,6 +1,6 @@
 'use strict';
 
-const TOOLS_ORIGIN = 'https://podhub.space';
+const TOOLS_ORIGIN = 'https://api.fiercetee.com';
 const STORAGE = {
   token: 'pub_license_token',
   user: 'pub_license_user',

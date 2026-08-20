@@ -1,10 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Podhub GPTs Bridge",
+  "name": "FierceTee GPTs Bridge",
   "version": "0.1.9.5",
   "version_name": "0.1.9-5-stable-queue-sync",
   "description": "Unified Podhub browser bridge for Clone, Redesign, and Mockup modules.",
-  "permissions": ["storage", "tabs", "downloads"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "downloads"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
@@ -28,14 +32,29 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
-      "js": ["content.js", "ui-fix.js"],
-      "css": ["content.css"],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "content.js",
+        "ui-fix.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://www.etsy.com/*", "https://*.etsy.com/*", "https://www.amazon.com/*", "https://*.amazon.com/*"],
-      "js": ["marketplace.js"],
+      "matches": [
+        "https://www.etsy.com/*",
+        "https://*.etsy.com/*",
+        "https://www.amazon.com/*",
+        "https://*.amazon.com/*"
+      ],
+      "js": [
+        "marketplace.js"
+      ],
       "run_at": "document_idle"
     }
   ]
