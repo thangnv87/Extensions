@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Podhub GPTs Bridge</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">P</div>
+      <div class="brand-copy">
+        <h1>Podhub GPTs Bridge</h1>
+        <p id="licenseState">Đang kiểm tra license…</p>
+      </div>
+      <span class="version">v0.1.9.5</span>
+    </header>
+
+    <section class="key-card" aria-labelledby="keyTitle">
+      <label id="keyTitle" for="licenseKey">License key</label>
+      <div class="key-row">
+        <input id="licenseKey" type="password" autocomplete="off" placeholder="phb_live_…">
+        <button id="activate" type="button">Kích hoạt</button>
+      </div>
+      <p id="keyHint" class="hint">Nhập key được cấp trong tài khoản Podhub.</p>
+    </section>
+
+    <section id="licenseInfo" class="license-card" hidden>
+      <div class="license-heading">
+        <div>
+          <span class="eyebrow">License hiện tại</span>
+          <strong id="planName">—</strong>
+        </div>
+        <div class="license-actions">
+          <span class="active-badge">Đang hoạt động</span>
+          <button id="logout" class="logout-button" type="button">Đăng xuất</button>
+        </div>
+      </div>
+      <dl class="license-grid">
+        <div><dt>Key</dt><dd id="maskedKey">—</dd></div>
+        <div><dt>Tài khoản</dt><dd id="accountEmail">—</dd></div>
+        <div><dt>Thời hạn</dt><dd id="licenseExpiry">—</dd></div>
+      </dl>
+      <div>
+        <span class="field-label">Module được mở</span>
+        <div id="moduleList" class="module-list"></div>
+      </div>
+    </section>
+
+    <nav class="quick-actions" aria-label="Liên kết nhanh">
+      <button id="openDashboard" class="quick-action primary" type="button">Bảng điều khiển</button>
+      <a class="quick-action" href="https://www.facebook.com/groups/1367688658852770" target="_blank" rel="noreferrer">Cộng đồng</a>
+      <a class="quick-action" href="https://tools.podhub.space/blog" target="_blank" rel="noreferrer">Blog</a>
+    </nav>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
