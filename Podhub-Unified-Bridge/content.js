@@ -9,6 +9,14 @@
     {id: 'redesign', label: 'Redesign'},
     {id: 'mockup', label: 'Mockup'}
   ];
+  const DATA_ORIGIN = 'https://podhub.space';
+  const MIN_GPT_IMAGE_BYTES = 30 * 1024;
+  const CLONE_PROMPT = `Clone chính xác design từ ảnh này thành flat artwork chính diện. Trước khi clone, phân tích kỹ text, typography, màu sắc, bố cục, tỷ lệ, texture và chi tiết, đồng thời loại bỏ ảnh hưởng của mockup như ánh sáng, nếp nhăn, texture vải, góc nghiêng và perspective.
+
+Giữ design sát bản gốc nhất, không redesign, không thêm/bớt chi tiết, không đổi màu, không tự thêm outline/stroke/viền cho text hoặc artwork.
+
+Output 1:1, high-resolution, design chính giữa, giữ đúng tỷ lệ, trên nền solid tương phản dễ tách; không transparent.`;
+  const CLONE_REMOVE_BACKGROUND_PROMPT = 'Xóa toàn bộ background khỏi thiết kế này, bao gồm màu nền. Giữ nguyên chính xác artwork gốc, không vẽ lại, không chỉnh sửa bất kỳ màu nào khác. Giữ nguyên tất cả các màu (đỏ, vàng, trắng, be, v.v.) và mọi chi tiết. Không thêm yếu tố mới, không thay đổi thiết kế. Xuất file PNG nền trong suốt, kích thước 4500×5400 px, 300 DPI.';
 
   let root = null;
   let launcher = null;
@@ -31,6 +39,8 @@
     redesign_custom_styles: [],
     redesign_count: 4,
     redesign_listing_markets: [],
+    clone_with_background: false,
+    clone_remove_background_gpt: false,
     mockup_products: ['tumbler_20oz', 'mug_11oz'],
     mockup_custom_products: [],
     listing_markets: ['etsy'],
@@ -38,10 +48,37 @@
     mockup_aspect_ratio: '16:9'
   };
   let serverConfig = null;
+  let dashboardOpenPending = false;
 
   function send(message) {
-    return chrome.runtime.sendMessage(message);
+    return new Promise((resolve, reject) => {
+      if (!chrome.runtime?.id) return reject(new Error('EXTENSION_CONTEXT_INVALIDATED'));
+      try {
+        chrome.runtime.sendMessage(message, response => {
+          const runtimeError = chrome.runtime.lastError;
+          if (runtimeError) reject(new Error(runtimeError.message || 'EXTENSION_MESSAGE_FAILED'));
+          else resolve(response);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
+
+  function revealDashboard() {
+    dashboardOpenPending = true;
+    if (!root) return false;
+    root.classList.add('pub-visible');
+    launcher?.classList.add('active');
+    loadJobs().catch(error => setLog(error.message));
+    return true;
+  }
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type !== 'PUB_OPEN_DASHBOARD') return;
+    const opened = revealDashboard();
+    sendResponse({ok: true, opened, pending: !opened});
+  });
 
   function escapeHtml(value) {
     return String(value ?? '')
@@ -125,7 +162,42 @@
       url: item?.url || item?.cdn_url || item?.image_url || '',
       name: item?.filename || item?.canonical_filename || '',
       kind: item?.kind || ''
-    })).filter(item => item.url);
+    })).filter(item => item.url || item.asset_id);
+  }
+
+  async function hydrateResultImage(image) {
+    if (!image || image.dataset.hydrated === '1' || image.dataset.hydrating === '1') return;
+    const assetId = image.dataset.assetId || '';
+    const url = image.dataset.assetUrl || image.getAttribute('src') || '';
+    if (!assetId && !url) return;
+    image.dataset.hydrating = '1';
+    const response = await send({
+      type: 'PUB_FETCH_ASSET',
+      source: {
+        asset_id: assetId,
+        url,
+        name: image.dataset.assetName || image.alt || 'podhub-result.png',
+        type: image.dataset.assetType || 'image/png'
+      }
+    });
+    delete image.dataset.hydrating;
+    if (response?.ok && response.data?.data_url) {
+      image.src = response.data.data_url;
+      image.dataset.hydrated = '1';
+      image.classList.remove('pub-image-load-failed');
+      return;
+    }
+    image.classList.add('pub-image-load-failed');
+    image.title = response?.error || 'RAW_IMAGE_LOAD_FAILED';
+  }
+
+  function hydrateResultImages(container) {
+    container?.querySelectorAll('img[data-pub-result-image]').forEach(image => {
+      hydrateResultImage(image).catch(error => {
+        image.classList.add('pub-image-load-failed');
+        image.title = error.message || 'RAW_IMAGE_LOAD_FAILED';
+      });
+    });
   }
 
   function assetSource(job) {
@@ -279,6 +351,10 @@
     if (runnerInput) settings.runner_id = runnerInput.value.trim() || settings.runner_id;
     const autoStyle = root.querySelector('#pub-redesign-auto-style');
     if (autoStyle) settings.redesign_auto_style = autoStyle.checked;
+    const cloneRemoveBackground = root.querySelector('#pub-clone-remove-background-gpt');
+    if (cloneRemoveBackground) settings.clone_remove_background_gpt = cloneRemoveBackground.checked;
+    const cloneWithBackground = root.querySelector('#pub-clone-with-background');
+    if (cloneWithBackground) settings.clone_with_background = cloneWithBackground.checked;
     const customStyle = root.querySelector('#pub-redesign-custom-style');
     if (customStyle) settings.redesign_custom_style = customStyle.value.trim();
     const redesignCount = root.querySelector('#pub-redesign-count');
@@ -303,6 +379,8 @@
     }
     return {
       runner_id: settings.runner_id,
+      clone_with_background: settings.clone_with_background === true,
+      clone_remove_background_gpt: settings.clone_remove_background_gpt === true,
       redesign_auto_style: settings.redesign_auto_style,
       redesign_style_presets: settings.redesign_style_presets,
       redesign_custom_style: settings.redesign_custom_style,
@@ -430,16 +508,21 @@
   async function queueSelectedRawForMockup() {
     const assets = [...selectedRawAssets.values()];
     if (!assets.length || running || batchRunning) return;
+    const runOptions = currentRunOptions();
     const response = await send({
       type: 'PUB_QUEUE_MOCKUPS',
       assetIds: assets.map(item => item.asset_id),
-      runOptions: currentRunOptions()
+      runOptions
     });
     if (!response?.ok) throw new Error(response?.error || 'Không thể tạo hàng đợi Mockup.');
     const result = response.data || {};
+    const mockupJobs = Array.isArray(result.jobs) ? result.jobs : [];
+    if (!mockupJobs.length) throw new Error('MOCKUP_JOB_CREATE_EMPTY');
     selectedRawAssets.clear();
-    updateRunButtons();
-    setLog(`Mockup nhận ${assets.length} ảnh · ${result.added || 0} job mới · ${result.skipped || 0} job đã có.`);
+    queueFilter = 'pending';
+    setModule('mockup');
+    setLog(`Mockup nhận ${assets.length} ảnh. Đang mở GPT và chạy ngay...`);
+    await startJobs(mockupJobs.map(job => ({...job, run_options: runOptions})));
   }
 
   function stopRun() {
@@ -476,7 +559,13 @@
 
   function getLatestAssistantText() {
     const turn = assistantTurns().at(-1);
-    return String(turn?.innerText || turn?.textContent || '').trim();
+    if (!turn) return '';
+    const visibleText = String(turn.innerText || turn.textContent || '').trim();
+    const codeText = [...turn.querySelectorAll('pre code, code')]
+      .map(node => String(node.textContent || '').trim())
+      .filter(Boolean)
+      .join('\n');
+    return codeText && !visibleText.includes(codeText) ? `${visibleText}\n${codeText}`.trim() : visibleText;
   }
 
   function findStopButton() {
@@ -484,18 +573,48 @@
   }
 
   function isGptImageUrl(url) {
-    return /^https?:/i.test(String(url || '')) && /backend-api\/(estuary\/content|files)|oaiusercontent\.com|dalleprodsec|sdmnt|openai\.com.*\/files/i.test(url);
+    return /^https?:/i.test(String(url || '')) && /backend-api\/(estuary\/content|files)|oaiusercontent\.com|dalleprodsec|sdmnt|blob\.core\.windows\.net|oaistatic\.com|images\.openai\.com|openai\.com.*\/files/i.test(url);
+  }
+
+  function assistantImageCandidates(img) {
+    const candidates = [];
+    const add = value => {
+      const url = String(value || '').trim();
+      if (isGptImageUrl(url) && !candidates.includes(url)) candidates.push(url);
+    };
+    add(img.getAttribute('src'));
+    add(img.src);
+    add(img.currentSrc);
+    const srcset = String(img.getAttribute('srcset') || '').split(',')
+      .map(item => item.trim().split(/\s+/)[0])
+      .filter(Boolean);
+    for (const value of srcset.reverse()) add(value);
+    for (const attribute of ['data-src', 'data-original-src', 'data-full-src', 'data-download-url']) add(img.getAttribute(attribute));
+    const anchor = img.closest('a[href]');
+    add(anchor?.href || anchor?.getAttribute('href'));
+    return candidates;
   }
 
   function getAssistantImageUrls() {
     const urls = [];
     for (const turn of assistantTurns()) {
       for (const img of turn.querySelectorAll('img')) {
-        const url = img.currentSrc || img.src || img.getAttribute('src') || '';
-        if (isGptImageUrl(url)) urls.push(url);
+        urls.push(...assistantImageCandidates(img));
       }
     }
     return [...new Set(urls)];
+  }
+
+  function imageSourceFallbacks(primaryUrl) {
+    const urls = [String(primaryUrl || '')].filter(Boolean);
+    for (const turn of assistantTurns()) {
+      for (const img of turn.querySelectorAll('img')) {
+        const candidates = assistantImageCandidates(img);
+        if (!candidates.includes(primaryUrl)) continue;
+        for (const candidate of [...candidates].reverse()) if (!urls.includes(candidate)) urls.push(candidate);
+      }
+    }
+    return urls;
   }
 
   async function waitForComposer(maxWaitMs = 25000) {
@@ -583,7 +702,7 @@
         last = current;
         changedAt = Date.now();
       }
-      if (current && current !== previousText && !findStopButton() && Date.now() - changedAt >= 2500) return current;
+      if (current && current !== previousText && !findStopButton() && Date.now() - changedAt >= 4000) return current;
       await sleep(700);
     }
     throw new Error('GPT_TEXT_TIMEOUT');
@@ -624,8 +743,7 @@
       if (!latest && !findStopButton() && assistantTurns().length > beforeTurnCount) {
         const turn = assistantTurns().at(-1);
         latest = [...(turn?.querySelectorAll('img') || [])]
-          .map(img => img.currentSrc || img.src || '')
-          .filter(isGptImageUrl)
+          .flatMap(assistantImageCandidates)
           .at(-1) || '';
       }
       if (latest !== candidate) {
@@ -648,38 +766,128 @@
     return response.data;
   }
 
-  async function uploadImageResult(moduleId, job, imageUrl, index, meta = {}) {
-    const image = await fetch(imageUrl, {credentials: 'include'});
-    if (!image.ok) throw new Error(`GPT_IMAGE_HTTP_${image.status}`);
-    const blob = await image.blob();
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+  function resultUploadPath(moduleId, id) {
+    if (moduleId === 'clone') return `/api/extension/clone-jobs/${encodeURIComponent(id)}/raw-clone`;
+    if (moduleId === 'redesign') return `/api/extension/redesign-jobs/${encodeURIComponent(id)}/raw-redesign`;
+    if (moduleId === 'mockup') return `/api/extension/mockup-jobs/${encodeURIComponent(id)}/mockups`;
+    throw new Error(`RESULT_MODULE_INVALID:${moduleId}`);
+  }
+
+  function filenameForBlob(filename, mimeType) {
+    const extension = mimeType === 'image/jpeg' ? 'jpg'
+      : mimeType === 'image/webp' ? 'webp'
+        : mimeType === 'image/gif' ? 'gif'
+          : 'png';
+    return String(filename || 'result.png').replace(/\.(?:png|jpe?g|webp|gif)$/i, `.${extension}`);
+  }
+
+  async function validateCapturedImage(blob) {
+    const mimeType = String(blob?.type || '').split(';')[0].toLowerCase();
+    if (!(blob instanceof Blob) || !mimeType.startsWith('image/')) throw new Error('GPT_IMAGE_CONTENT_INVALID');
+    if (blob.size < MIN_GPT_IMAGE_BYTES) throw new Error(`GPT_IMAGE_TOO_SMALL:${blob.size}`);
+    if (typeof createImageBitmap === 'function') {
+      const bitmap = await createImageBitmap(blob);
+      const width = bitmap.width;
+      const height = bitmap.height;
+      bitmap.close();
+      if (width < 200 || height < 200) throw new Error(`GPT_IMAGE_DIMENSIONS_INVALID:${width}x${height}`);
+    }
+    return blob;
+  }
+
+  async function captureGptImage(sourceUrls) {
+    let lastError = null;
+    for (const sourceUrl of sourceUrls) {
+      try {
+        const response = await fetch(sourceUrl, {credentials: 'include', cache: 'no-store'});
+        if (!response.ok) throw new Error(`GPT_IMAGE_HTTP_${response.status}`);
+        return {blob: await validateCapturedImage(await response.blob()), sourceUrl};
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError || new Error('GPT_IMAGE_CAPTURE_FAILED');
+  }
+
+  async function uploadCapturedImage(moduleId, id, kind, filename, blob, meta = {}) {
+    const stored = await chrome.storage.local.get(['pub_license_token']);
+    const token = String(stored.pub_license_token || '');
+    if (!token) throw new Error('EXTENSION_TOKEN_MISSING');
+    const normalizedFilename = filenameForBlob(filename, blob.type);
+    const query = new URLSearchParams({
+      ...Object.fromEntries(Object.entries({...meta, runner_id: settings.runner_id})
+        .filter(([, value]) => value !== undefined && value !== null && String(value) !== '')
+        .map(([key, value]) => [key, String(value)])),
+      filename: normalizedFilename,
+      kind
     });
+    const response = await fetch(`${DATA_ORIGIN}${resultUploadPath(moduleId, id)}?${query}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': blob.type || 'image/png',
+        'X-Podhub-Request-Id': `ext_${crypto.randomUUID()}`
+      },
+      body: blob
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.success === false) {
+      throw new Error(payload?.message || payload?.error || `RESULT_UPLOAD_HTTP_${response.status}`);
+    }
+    return payload.data ?? payload;
+  }
+
+  async function uploadImageResult(moduleId, job, imageUrl, index, meta = {}) {
     const id = jobId(job);
     const stem = slugId(baseJobTitle(job) || id || moduleId) || moduleId;
     const kind = moduleId === 'clone' ? 'raw_clone' : moduleId === 'redesign' ? 'raw_redesign' : 'mockup';
     const filename = meta.filename || `${stem}__${kind}_${String(index).padStart(2, '0')}.png`;
-    const response = await send({
-      type: 'PUB_UPLOAD_RESULT',
-      moduleId,
-      jobId: id,
-      kind,
+    const sourceUrls = imageSourceFallbacks(imageUrl);
+    const captured = await captureGptImage(sourceUrls);
+    const uploaded = await uploadCapturedImage(moduleId, id, kind, filename, captured.blob, meta);
+    rememberUploadedResult(moduleId, job, uploaded, filename, meta);
+    return uploaded;
+  }
+
+  function rememberUploadedResult(moduleId, job, uploaded, filename, meta = {}) {
+    const key = moduleId === 'clone' ? 'raw_clone_assets' : moduleId === 'redesign' ? 'raw_redesign_assets' : 'mockups';
+    const item = {
+      asset_id: uploaded?.asset_id || uploaded?.id || '',
+      url: uploaded?.url || uploaded?.cdn_url || uploaded?.stored_url || '',
       filename,
-      dataUrl,
-      meta: {...meta, runner_id: settings.runner_id}
-    });
-    if (!response?.ok) throw new Error(response?.error || `${kind.toUpperCase()}_UPLOAD_FAILED`);
-    return response.data;
+      content_sha256: uploaded?.content_sha256 || '',
+      ...meta
+    };
+    if (!item.asset_id && !item.url) return;
+    const targets = [job, ...jobs.filter(candidate => jobId(candidate) === jobId(job))];
+    for (const target of new Set(targets.filter(Boolean))) {
+      if (!target.results || typeof target.results !== 'object') target.results = {};
+      const current = Array.isArray(target.results[key]) ? target.results[key] : [];
+      target.results[key] = current.filter(existing => {
+        if (item.asset_id && String(existing?.asset_id || '') === String(item.asset_id)) return false;
+        if (moduleId === 'mockup') {
+          return !(String(existing?.product_id || '') === String(item.product_id || '') && Number(existing?.mockup_no) === Number(item.mockup_no));
+        }
+        return true;
+      });
+      target.results[key].push(item);
+    }
+    if (activeModule === moduleId) renderJobs();
   }
 
   async function apiStatus(moduleId, job, body) {
     if (!jobId(job)) return null;
     const response = await send({type: 'PUB_JOB_STATUS', moduleId, jobId: jobId(job), body});
     if (!response?.ok) setLog(response?.error || 'Không cập nhật được trạng thái job.');
-    return response?.data || null;
+    const updated = response?.data || null;
+    if (response?.ok) {
+      const patch = updated && typeof updated === 'object' ? updated : {status: body?.status};
+      Object.assign(job, patch);
+      for (const current of jobs) if (jobId(current) === jobId(job)) Object.assign(current, patch);
+      if (body?.status === 'done') queueFilter = 'done';
+      if (activeModule === moduleId) renderJobs();
+    }
+    return updated;
   }
 
   function moduleOptions(run) {
@@ -689,6 +897,17 @@
   function labelList(values, fallback) {
     const list = Array.isArray(values) ? values.filter(Boolean) : [];
     return list.length ? list.join(', ') : fallback;
+  }
+
+  function mockupProductIds(options = {}) {
+    const selected = Array.isArray(options.mockup_products) ? options.mockup_products : [];
+    const custom = Array.isArray(options.mockup_custom_products) ? options.mockup_custom_products : [];
+    const ids = selected.map(value => String(value || '').trim()).filter(Boolean);
+    for (const label of custom) {
+      const id = slugId(label);
+      if (id && !ids.some(value => slugId(value) === id)) ids.push(id);
+    }
+    return [...new Map(ids.map(value => [slugId(value), value])).values()];
   }
 
   function buildRedesignPlanningPrompt(run) {
@@ -724,7 +943,7 @@
 
   function buildMockupPlanningPrompt(run) {
     const options = moduleOptions(run);
-    const products = labelList([...(options.mockup_products || []), ...(options.mockup_custom_products || [])], 'sản phẩm đã cấu hình');
+    const products = labelList(mockupProductIds(options), 'sản phẩm đã cấu hình');
     const markets = labelList(options.listing_markets, 'không theo sàn cụ thể');
     const count = Math.max(1, Math.min(10, Number(options.mockup_count || 3)));
     const ratio = options.mockup_aspect_ratio || '16:9';
@@ -740,15 +959,46 @@
   }
 
   function findMockupPlan(text) {
-    return balancedJsonValues(text)
-      .flatMap(value => Array.isArray(value) ? value : [value])
-      .find(value => value?.schema_version === 'podhub_mockup_prompts_v1');
+    const found = [];
+    const visit = value => {
+      if (Array.isArray(value)) return value.forEach(visit);
+      if (!value || typeof value !== 'object') return;
+      if (String(value.schema_version || '').trim().toLowerCase() === 'podhub_mockup_prompts_v1') found.push(value);
+      for (const child of Object.values(value)) if (child && typeof child === 'object') visit(child);
+    };
+    jsonValuesFromAssistantText(text).forEach(visit);
+    return found.at(-1) || null;
+  }
+
+  function normalizeMockupPlan(plan, products) {
+    if (!plan || typeof plan !== 'object') return null;
+    const sourceProducts = Array.isArray(plan.products)
+      ? plan.products
+      : plan.products && typeof plan.products === 'object'
+        ? Object.entries(plan.products).map(([productId, value]) => ({product_id: productId, ...(value && typeof value === 'object' ? value : {})}))
+        : [];
+    const normalizedProducts = products.map(expectedId => {
+      const source = sourceProducts.find(item => slugId(item?.product_id ?? item?.id ?? item?.product) === slugId(expectedId));
+      if (!source) return null;
+      const prompts = source.mockup_prompts ?? source.mockupPrompts ?? source.prompts;
+      return {
+        ...source,
+        product_id: expectedId,
+        mockup_prompts: Array.isArray(prompts) ? prompts.map((item, index) => ({
+          ...item,
+          mockup_no: Number(item?.mockup_no ?? item?.mockup_number ?? item?.number ?? index + 1),
+          prompt: String(item?.prompt ?? item?.image_prompt ?? item?.text ?? '').trim()
+        })) : prompts
+      };
+    });
+    return {...plan, schema_version: 'podhub_mockup_prompts_v1', products: normalizedProducts.filter(Boolean)};
   }
 
   function mockupPlanProblem(plan, products, count) {
-    if (!plan || !Array.isArray(plan.products) || plan.products.length !== products.length) return 'PRODUCTS_INVALID';
+    if (!plan) return 'PLAN_MISSING';
+    if (!Array.isArray(plan.products) || plan.products.length !== products.length) return 'PRODUCTS_INVALID';
     for (const productId of products) {
-      const product = plan.products.find(item => String(item?.product_id || '') === String(productId));
+      const product = plan.products.find(item => slugId(item?.product_id) === slugId(productId));
       if (!product) return `PRODUCT_MISSING:${productId}`;
       if (!Array.isArray(product.mockup_prompts) || product.mockup_prompts.length !== count) return `PROMPT_COUNT_INVALID:${productId}`;
       const numbers = new Set();
@@ -762,7 +1012,7 @@
   }
 
   function balancedJsonValues(text) {
-    const source = String(text || '');
+    const source = normalizeAssistantJsonText(text);
     const values = [];
     for (let start = 0; start < source.length; start++) {
       if (source[start] !== '{' && source[start] !== '[') continue;
@@ -798,6 +1048,20 @@
     return values;
   }
 
+  function normalizeAssistantJsonText(text) {
+    return String(text || '')
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '');
+  }
+
+  function jsonValuesFromAssistantText(text) {
+    const source = normalizeAssistantJsonText(text);
+    const values = [];
+    const fenced = /```(?:json)?\s*([\s\S]*?)```/gi;
+    for (const match of source.matchAll(fenced)) values.push(...balancedJsonValues(match[1]));
+    values.push(...balancedJsonValues(source));
+    return values;
+  }
+
   function collectListings(values) {
     const found = [];
     const visit = (value, context = {}) => {
@@ -816,7 +1080,7 @@
   }
 
   async function uploadListings(moduleId, job, text, extra = {}) {
-    const candidates = collectListings(balancedJsonValues(text));
+    const candidates = collectListings(jsonValuesFromAssistantText(text));
     for (const listing of candidates) {
       const response = await send({
         type: 'PUB_UPLOAD_RESULT',
@@ -837,9 +1101,10 @@
   }
 
   function findRedesignPlan(text) {
-    return balancedJsonValues(text)
+    return jsonValuesFromAssistantText(text)
       .flatMap(value => Array.isArray(value) ? value : [value])
-      .find(value => Array.isArray(value?.styles));
+      .filter(value => Array.isArray(value?.styles))
+      .at(-1);
   }
 
   function redesignPlanProblem(plan, expectedCount, expectedStyleIds = []) {
@@ -858,13 +1123,32 @@
 
   async function runCloneModule(run) {
     const job = run.job || {};
+    const options = moduleOptions(run);
     const asset = await fetchJobAsset(job);
     const before = {urls: new Set(getAssistantImageUrls()), turnCount: assistantTurns().length};
     await attachDataUrl(asset.data_url, asset.name, asset.type);
     await apiStatus('clone', job, {status: 'processing', progress: {phase: 'image_sent', total: 1, done: 0}});
-    await sendAttachmentOnly();
-    const url = await waitForNewImage(before);
-    await uploadImageResult('clone', job, url, 1);
+    let url;
+    if (options.clone_with_background === true) {
+      await sendPrompt(CLONE_PROMPT);
+      url = await waitForNewImage(before);
+    } else if (options.clone_remove_background_gpt === true) {
+      await sendPrompt(CLONE_REMOVE_BACKGROUND_PROMPT);
+      url = await waitForNewImage(before);
+    } else {
+      await sendAttachmentOnly();
+      url = await waitForNewImage(before);
+    }
+    if (options.clone_with_background === true && options.clone_remove_background_gpt === true) {
+      const beforeRemoval = {urls: new Set(getAssistantImageUrls()), turnCount: assistantTurns().length};
+      await apiStatus('clone', job, {status: 'processing', progress: {phase: 'removing_background', total: 1, done: 0}});
+      await sendPrompt(CLONE_REMOVE_BACKGROUND_PROMPT);
+      url = await waitForNewImage(beforeRemoval);
+    }
+    await uploadImageResult('clone', job, url, 1, {
+      clone_with_background: options.clone_with_background === true,
+      background_removed: options.clone_remove_background_gpt === true
+    });
     await apiStatus('clone', job, {status: 'done', progress: {phase: 'done', total: 1, done: 1}});
   }
 
@@ -918,7 +1202,7 @@
   async function runMockupModule(run) {
     const job = run.job || {};
     const options = moduleOptions(run);
-    const products = [...(options.mockup_products || []), ...(options.mockup_custom_products || [])].filter(Boolean);
+    const products = mockupProductIds(options);
     const productList = products.length ? products : ['mockup'];
     const markets = Array.isArray(options.listing_markets) ? options.listing_markets : [];
     const total = Math.max(1, Math.min(10, Number(options.mockup_count || 3)));
@@ -927,12 +1211,12 @@
     const previousText = getLatestAssistantText();
     await apiStatus('mockup', job, {status: 'processing', progress: {phase: 'planning', mockups_total: productList.length * total, mockups_done: 0}});
     let planText = await requestAssistantText(buildMockupPlanningPrompt(run), previousText);
-    let plan = findMockupPlan(planText);
+    let plan = normalizeMockupPlan(findMockupPlan(planText), productList);
     let planProblem = mockupPlanProblem(plan, productList, total);
     if (planProblem) {
       const repairPrevious = getLatestAssistantText();
       planText = await requestAssistantText(`Phần Mockup prompts chưa đúng (${planProblem}). Hãy trả lại riêng mục Mockup prompts với đúng một fenced JSON block schema podhub_mockup_prompts_v1 cho các sản phẩm ${productList.join(', ')}, mỗi sản phẩm có đúng ${total} prompt đánh số từ 1 đến ${total}. Chưa tạo ảnh.`, repairPrevious);
-      plan = findMockupPlan(planText);
+      plan = normalizeMockupPlan(findMockupPlan(planText), productList);
       planProblem = mockupPlanProblem(plan, productList, total);
     }
     if (planProblem) throw new Error(`MOCKUP_PLAN_INVALID:${planProblem}`);
@@ -1097,7 +1381,7 @@
         </div>
         <div class="pub-job-content">
           <b class="pub-job-title" title="${escapeHtml(titleOf(job) || title)}">${escapeHtml(title)}</b>
-          ${previews.length ? `<div class="pub-result-strip">${previews.map((item, previewIndex) => `<div class="pub-result-item ${selectedRawAssets.has(item.asset_id) ? 'selected' : ''}"><button type="button" class="pub-result-preview" data-gallery-index="${previewIndex + 1}" title="Xem ảnh kết quả"><img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name)}"></button>${item.asset_id && activeModule !== 'mockup' ? `<label class="pub-raw-select" title="Chọn để tạo Mockup"><input type="checkbox" data-asset-id="${escapeHtml(item.asset_id)}" ${selectedRawAssets.has(item.asset_id) ? 'checked' : ''}></label>` : ''}</div>`).join('')}</div>` : ''}
+          ${previews.length ? `<div class="pub-result-strip">${previews.map((item, previewIndex) => `<div class="pub-result-item ${selectedRawAssets.has(item.asset_id) ? 'selected' : ''}"><button type="button" class="pub-result-preview" data-gallery-index="${previewIndex + 1}" title="Xem ảnh kết quả"><img data-pub-result-image="1" data-asset-id="${escapeHtml(item.asset_id)}" data-asset-url="${escapeHtml(item.url)}" data-asset-name="${escapeHtml(item.name)}" src="${escapeHtml(item.asset_id ? 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' : (item.url || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='))}" alt="${escapeHtml(item.name)}"></button>${item.asset_id && activeModule !== 'mockup' ? `<label class="pub-raw-select" title="Chọn để tạo Mockup"><input type="checkbox" data-asset-id="${escapeHtml(item.asset_id)}" ${selectedRawAssets.has(item.asset_id) ? 'checked' : ''}></label>` : ''}</div>`).join('')}</div>` : ''}
         </div>
       </article>`;
     }).join('');
@@ -1117,9 +1401,13 @@
       card.querySelector('.pub-job-delete').addEventListener('click', () => {
         if (window.confirm(`Xoá ${shortJobTitle(job)} khỏi hàng đợi?`)) deleteJob(job).catch(error => setLog(error.message));
       });
-      const gallery = [{url: imageUrl(job), name: shortJobTitle(job)}, ...resultImages(job)].filter(item => item.url);
       card.querySelectorAll('[data-gallery-index]').forEach(button => {
-        button.addEventListener('click', () => openImagePreview(gallery, Number(button.dataset.galleryIndex || 0)));
+        button.addEventListener('click', () => {
+          const gallery = [...card.querySelectorAll('[data-gallery-index] img')]
+            .map(image => ({url: image.currentSrc || image.src || '', name: image.alt || ''}))
+            .filter(item => item.url);
+          openImagePreview(gallery, Number(button.dataset.galleryIndex || 0));
+        });
       });
       card.querySelectorAll('.pub-raw-select input').forEach(input => {
         input.addEventListener('change', event => {
@@ -1136,6 +1424,7 @@
         });
       });
     });
+    hydrateResultImages(list);
     updateRunButtons();
   }
 
@@ -1355,6 +1644,7 @@
       `    <div class="pub-sub">v${chrome.runtime.getManifest().version} · Kết nối Custom GPTs với Podhub: Clone, Redesign, Mockup, Listing</div>`,
       '  </div>',
       '  <div class="pub-head-actions">',
+      '    <button class="pub-icon-btn" type="button" data-action="reconnect-extension" title="Kết nối lại và đồng bộ">↻</button>',
       '    <button class="pub-icon-btn" type="button" data-action="config" title="Cấu hình">⚙</button>',
       '    <button class="pub-close" type="button">x</button>',
       '  </div>',
@@ -1377,7 +1667,12 @@
       '    <button class="pub-config-tab" type="button" data-config-module="mockup">Mockup</button>',
       '  </div>',
       '  <div class="pub-config-panel active" data-config-panel="clone">',
-      `    <div class="pub-note">${flowTextHtml('clone')}Clone không cần cấu hình riêng. Module này dùng job và GPT link từ server.</div>`,
+      `    ${flowTextHtml('clone')}`,
+      '    <div class="pub-clone-options">',
+      `      <label class="pub-check"><input id="pub-clone-with-background" type="checkbox" ${settings.clone_with_background ? 'checked' : ''}><span>Clone kèm nền</span></label>`,
+      `      <label class="pub-check"><input id="pub-clone-remove-background-gpt" type="checkbox" ${settings.clone_remove_background_gpt ? 'checked' : ''}><span>Xóa nền bằng GPTs</span></label>`,
+      '    </div>',
+      '    <div class="pub-note">Không chọn option: chỉ gửi ảnh. Chọn cả hai: clone ảnh có nền trước, sau đó xóa nền và chỉ lưu ảnh cuối.</div>',
       '  </div>',
       '  <div class="pub-config-panel" data-config-panel="redesign">',
       `    ${flowTextHtml('redesign')}`,
@@ -1460,6 +1755,8 @@
     floatingStop.addEventListener('click', stopRun);
     document.body.appendChild(floatingStop);
 
+    if (dashboardOpenPending) revealDashboard();
+
     launcher.addEventListener('click', () => {
       const visible = root.classList.toggle('pub-visible');
       launcher.classList.toggle('active', visible);
@@ -1468,6 +1765,20 @@
     root.querySelector('.pub-close').addEventListener('click', () => {
       root.classList.remove('pub-visible');
       launcher.classList.remove('active');
+    });
+    root.querySelector('[data-action="reconnect-extension"]').addEventListener('click', async () => {
+      setLog('Đang kết nối lại và đồng bộ với Podhub...');
+      try {
+        const stateResponse = await send({type: 'PUB_GET_STATE'});
+        if (!stateResponse?.ok) throw new Error(stateResponse?.error || 'EXTENSION_SESSION_CHECK_FAILED');
+        serverConfig = stateResponse.data?.config || serverConfig;
+        setAccountStatus(stateResponse.data || {});
+        await refreshServerConfig();
+        await loadJobs();
+        setLog(`Đã kết nối lại Podhub · ${activeModule}: ${jobs.length} jobs.`);
+      } catch (error) {
+        setLog(error.message || 'EXTENSION_RECONNECT_FAILED');
+      }
     });
     root.querySelector('[data-action="config"]').addEventListener('click', () => {
       const open = root.querySelector('.pub-config').classList.toggle('visible');
@@ -1535,6 +1846,11 @@
   async function init() {
     loadLocalSettings();
     buildPanel();
+    const dashboardRequest = await chrome.storage.local.get(['pub_open_dashboard_requested']);
+    if (dashboardRequest.pub_open_dashboard_requested) {
+      revealDashboard();
+      await chrome.storage.local.remove(['pub_open_dashboard_requested']);
+    }
     const stateResponse = await send({type: 'PUB_GET_STATE'});
     if (stateResponse?.ok) {
       serverConfig = stateResponse.data?.config || serverConfig;
@@ -1562,5 +1878,12 @@
     }
   }
 
-  init().catch(() => {});
+  init().catch(error => {
+    console.error('[Podhub Bridge] Dashboard init failed:', error);
+    if (root) {
+      root.classList.add('pub-visible');
+      launcher?.classList.add('active');
+      setLog(`Dashboard init failed: ${error.message || error}`);
+    }
+  });
 })();

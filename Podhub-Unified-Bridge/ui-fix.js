@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const PRICING_URL = "https://tools.podhub.space/pricing";
+  const PRICING_URL = "https://podhub.space/pricing";
   const ALL_MODULES = ["clone", "redesign", "mockup"];
   let licenseSyncing = false;
   let licenseStatusObserver;
@@ -44,7 +44,7 @@
     const marketGrid = panel.querySelector("#pub-redesign-market-grid");
     const productGrid = panel.querySelector("#pub-redesign-product-grid");
     const customProduct = panel.querySelector("#pub-redesign-custom-product")?.closest(".pub-add-row");
-    if (!flow || !countRow || !autoStyle || !styleGrid || !customStyle || !marketGrid || !productGrid || !customProduct) return false;
+    if (!flow || !countRow || !autoStyle || !styleGrid || !customStyle || !marketGrid) return false;
 
     const saveButton = prepareSaveButton(panel, countRow);
     countRow.classList.add("pub-single-field");
@@ -79,9 +79,8 @@
       listingTitle,
       listingNote,
       marketGrid,
-      productLabel,
-      productGrid,
-      customProduct,
+      ...(productGrid ? [productLabel, productGrid] : []),
+      ...(customProduct ? [customProduct] : []),
       ...(saveButton ? [saveButton] : [])
     );
     panel.dataset.uiUnified = "1";
@@ -482,7 +481,7 @@
       });
       setTimeout(() => loadFallbackJobs().catch(() => {}), 500);
     }
-    if (redesignReady && mockupReady) observer.disconnect();
+    return redesignReady && mockupReady;
   }
 
   if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
@@ -492,21 +491,23 @@
         syncLicenseUi().catch(() => {});
       }
       if (changes.pub_marketplace_jobs_revision) refreshMarketplaceJobs();
-      if (changes.pub_open_dashboard_requested?.newValue) consumeDashboardRequest().catch(() => {});
     });
   }
 
   if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message?.type === "PUB_OPEN_DASHBOARD") {
-        sendResponse({ok: revealDashboard()});
-        return;
-      }
       if (message?.type === "PUB_MARKETPLACE_JOBS_UPDATED") refreshMarketplaceJobs();
     });
   }
 
-  const observer = new MutationObserver(applyUiFix);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  applyUiFix();
+  let bootstrapAttempts = 0;
+  const bootstrapUiFix = () => {
+    if (document.querySelector("#pub-root")) {
+      applyUiFix();
+      return;
+    }
+    bootstrapAttempts += 1;
+    if (bootstrapAttempts < 20) setTimeout(bootstrapUiFix, 250);
+  };
+  bootstrapUiFix();
 })();

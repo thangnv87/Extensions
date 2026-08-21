@@ -290,6 +290,12 @@
   gap: 6px;
 }
 
+.pub-clone-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
 .pub-check {
   display: flex !important;
   min-height: 34px;
@@ -394,7 +400,8 @@
 }
 
 .pub-account-status {
-  flex: 1;
+  flex: 0 0 auto;
+  min-height: 18px;
   color: #dbe6f3;
   font-size: 12px;
   line-height: 1.35;
@@ -456,6 +463,11 @@
 .pub-tab.active {
   border-bottom-color: var(--pub-neutral);
   color: #e2e8f0;
+}
+
+.pub-config.visible {
+  justify-content: flex-start;
+  align-content: flex-start;
 }
 
 .pub-tab.pub-tab-locked {

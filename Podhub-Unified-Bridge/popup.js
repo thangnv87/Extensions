@@ -112,7 +112,7 @@ async function openDashboard() {
     const response = await chrome.tabs.sendMessage(activeTab.id, {type: 'PUB_OPEN_DASHBOARD'}).catch(() => null);
     if (!response?.ok) {
       await chrome.storage.local.set({pub_open_dashboard_requested: Date.now()});
-      await chrome.tabs.reload(activeTab.id);
+      throw new Error('Tab ChatGPT chưa kết nối với extension. Anh refresh tab ChatGPT một lần rồi mở lại bảng điều khiển.');
     }
     window.close();
   } catch (error) {

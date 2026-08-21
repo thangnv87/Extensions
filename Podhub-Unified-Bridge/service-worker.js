@@ -1,3 +1,3 @@
 'use strict';
 
-importScripts('bridge-v1-client.js', 'background.js');
+importScripts('bridge-v1-client.js', 'background-source.js');

@@ -1,1 +1,160 @@
-(function(_0x2861d8,_0x456d6f){const _0x4cc50c={_0x3557b2:0x1e7},_0x40f7aa=_0x631d,_0x2e10ed=_0x2861d8();while(!![]){try{const _0x462d8b=-parseInt(_0x40f7aa(0x1d9))/(0x908+0xf2*-0x26+0x1ae5)+-parseInt(_0x40f7aa(0x1e4))/(-0x15c1+-0xad*-0x27+-0x498)+-parseInt(_0x40f7aa(0x1d8))/(-0x2*0x809+-0x7a*-0x35+-0x92d*0x1)+-parseInt(_0x40f7aa(0x203))/(-0x9*0x2a7+-0x1dca+-0xd*-0x421)*(-parseInt(_0x40f7aa(_0x4cc50c._0x3557b2))/(0x81*-0x3e+-0x7*-0x243+0xf6e))+-parseInt(_0x40f7aa(0x1f3))/(0x1530*-0x1+0xb*0x2eb+-0xae3)*(-parseInt(_0x40f7aa(0x1cf))/(0x1046*-0x2+-0x3f*-0x53+0xa*0x137))+parseInt(_0x40f7aa(0x21c))/(-0x11d*-0x17+0x1bf9+0x2e*-0x12a)+-parseInt(_0x40f7aa(0x206))/(-0xecc+-0x1057*0x2+0x2f83)*(parseInt(_0x40f7aa(0x218))/(-0x1*-0x436+-0x7f5+0x3c9));if(_0x462d8b===_0x456d6f)break;else _0x2e10ed['push'](_0x2e10ed['shift']());}catch(_0x38278c){_0x2e10ed['push'](_0x2e10ed['shift']());}}}(_0xbf0f,0x67bfb*0x1+-0x48a*0x106+-0x6cb6*-0x7),function installPodhubBridgeV1(_0x58ec98){'use strict';const _0x44ddd3={_0xda077f:0x1f7,_0x51dba6:0x1df,_0x575cd8:0x200,_0x3b63aa:0x213,_0x260325:0x1d1},_0x33e238={_0x5ba33e:0x1fe},_0x350453={_0x37e8dd:0x1d3},_0x37e366={_0x1fe4bc:0x1d4,_0x3e340a:0x1f6},_0x3ca44d={_0xf2670b:0x1cd},_0x5c0d3e={_0x376ed9:0x1ff},_0x8a016e={_0x35fea9:0x1f6},_0x5da54f={_0x2864f9:0x1e6,_0x4c3884:0x216,_0x294708:0x202,_0x7de6b5:0x1e8,_0x1d6315:0x1ed},_0x1d0df8={_0x17e94b:0x20c,_0x14f7e1:0x1e5,_0x3a4f22:0x1c8},_0x5a912b=_0x631d,_0x575cd7={'BsZbe':function(_0x51990e,_0x45920f){return _0x51990e(_0x45920f);},'yRhDo':function(_0x51e5d7){return _0x51e5d7();},'CNEVi':function(_0x26270c,_0x124570){return _0x26270c+_0x124570;},'OyXoo':function(_0x48f9d2){return _0x48f9d2();},'DpdjA':function(_0x56b8a9){return _0x56b8a9();},'DDfxN':function(_0x1c9333,_0x227cb4){return _0x1c9333(_0x227cb4);},'AcSnp':function(_0x276628,_0x2a13c9){return _0x276628(_0x2a13c9);},'mreqC':function(_0x3841ef,_0x3cd7ba,_0x5d8c57,_0x3df22a){return _0x3841ef(_0x3cd7ba,_0x5d8c57,_0x3df22a);},'wEMQy':function(_0x18ab6b,_0x5ab412){return _0x18ab6b!==_0x5ab412;},'VejlD':_0x5a912b(0x215)+_0x5a912b(0x1dc)+_0x5a912b(_0x44ddd3._0xda077f)+_0x5a912b(_0x44ddd3._0x51dba6)};const _0x2abdeb='/api/bridge/'+'v1',_0x1554c7=_0x5a912b(0x21a)+_0x5a912b(_0x44ddd3._0x575cd8),_0x81f903=(0x94*-0x40+0x47d+-0x1*-0x2088)*(-0x7a*0x3b+0x2*-0x11+0x1c7c)*(-0xc92+-0x7*-0xc1+-0x1*-0xb33),_0x585429=new Set(['CAPABILITY_N'+_0x5a912b(0x1c4),_0x5a912b(0x1fd)+'SABLED','BRIDGE_GATEW'+_0x5a912b(0x1da)]),_0x4e1e58=_0x2dbc00=>String(_0x2dbc00||'')['trim']()['replace'](/[^A-Za-z0-9._:-]+/g,'-')['slice'](-0x22da+-0x1694+0x396e,-0x1*-0xa64+-0x7b*-0x1b+-0x16a9*0x1),_0x56c1ae=(_0x56634f,_0x2ed829)=>_0x5a912b(0x209)+_0x4e1e58(_0x56634f)+':'+(_0x4e1e58(_0x2ed829)||'unknown'),_0x1b8576=_0x3c5f39=>{const _0xeb586f=_0x5a912b,_0x136c74=typeof _0x3c5f39===_0xeb586f(_0x1d0df8._0x17e94b)?_0x3c5f39:JSON[_0xeb586f(_0x1d0df8._0x14f7e1)](_0x3c5f39??null);let _0x3cbbd9=-0x32eaa904+0xc9f06e6a+0x1*-0x15e927a1;for(let _0x54be72=-0x1*0x221f+-0x16*-0x16a+0x303;_0x54be72<_0x136c74[_0xeb586f(0x20b)];_0x54be72+=0xf77+-0x228a+-0x4a*-0x42){_0x3cbbd9^=_0x136c74[_0xeb586f(0x1c5)](_0x54be72),_0x3cbbd9=Math[_0xeb586f(_0x1d0df8._0x3a4f22)](_0x3cbbd9,0x17*0x13b67d+0x43d1bf*-0x5+0x4e2ef*0x1d);}return(_0x3cbbd9>>>0x2c3*0x3+0x7f7*0x3+-0x6*0x55d)['toString'](0x1781*0x1+0x1541*-0x1+-0x230)['padStart'](0x25*0x6f+-0x9*-0x7d+-0x1468,'0');},_0x4928be=_0x6625e7=>{const _0x2d663c=_0x5a912b,_0x20c6d3=String(_0x6625e7?.[_0x2d663c(0x1c6)]||_0x6625e7?.[_0x2d663c(_0x5da54f._0x2864f9)]||'')[_0x2d663c(_0x5da54f._0x4c3884)](),_0x496a8b=_0x6625e7?.['captured_at']||_0x6625e7?.[_0x2d663c(_0x5da54f._0x294708)]?.[_0x2d663c(0x212)]||new Date()['toISOString']();return{'source':_0x20c6d3,'source_listing_id':_0x575cd7['BsZbe'](String,_0x6625e7?.[_0x2d663c(0x1ca)]||_0x6625e7?.[_0x2d663c(_0x5da54f._0x7de6b5)+_0x2d663c(0x1f8)]||_0x6625e7?.['id']||''),'captured_at':_0x496a8b,'listing':{..._0x6625e7},'requested_workflows':Array[_0x2d663c(0x201)](_0x6625e7?.[_0x2d663c(0x1ed)+_0x2d663c(0x1fa)])?_0x6625e7[_0x2d663c(_0x5da54f._0x1d6315)+_0x2d663c(0x1fa)]:[],'metadata':{'source_page':_0x6625e7?.['source_page']||_0x6625e7?.['product_url']||null}};},_0x29576e=_0xe85da4=>({'kind':_0xe85da4['kind'],'result':_0xe85da4['kind']===_0x5a912b(0x217)?_0xe85da4['body']||_0xe85da4[_0x5a912b(0x1dd)]||{}:{'data_url':_0xe85da4[_0x5a912b(0x205)],'filename':_0xe85da4[_0x5a912b(0x1d2)]||(_0xe85da4[_0x5a912b(0x1f4)]||_0x5a912b(0x1ee))+_0x5a912b(0x1ec)},'asset_ids':Array[_0x5a912b(0x201)](_0xe85da4['assetIds'])?_0xe85da4[_0x5a912b(0x1db)]:[],'metadata':_0xe85da4[_0x5a912b(0x1dd)]&&typeof _0xe85da4[_0x5a912b(0x1dd)]==='object'?_0xe85da4[_0x5a912b(0x1dd)]:{},'terminal':_0xe85da4[_0x5a912b(0x1d6)]===!![]});function _0xdaeacd({request:_0x41799a,storageGet:_0x305f84,storageSet:_0x4fe5,now:now=()=>Date[_0x5a912b(0x211)]()}){const _0x2c5b16=_0x5a912b,_0xb47b60={'kIYtE':function(_0x218553,_0x2e4983){const _0x2e4395=_0x631d;return _0x575cd7[_0x2e4395(_0x8a016e._0x35fea9)](_0x218553,_0x2e4983);}};if(_0x575cd7[_0x2c5b16(_0x33e238._0x5ba33e)](typeof _0x41799a,_0x2c5b16(0x1d7))||_0x575cd7[_0x2c5b16(0x1fe)](typeof _0x305f84,'function')||_0x575cd7[_0x2c5b16(0x1fe)](typeof _0x4fe5,'function'))throw new Error(_0x575cd7[_0x2c5b16(0x1de)]);const _0x3aca6f=async()=>{const _0x5b3128=_0x2c5b16,_0x543892=await _0xb47b60[_0x5b3128(_0x5c0d3e._0x376ed9)](_0x305f84,[_0x1554c7]),_0x1bd859=_0x543892?.[_0x1554c7];return _0x1bd859&&typeof _0x1bd859===_0x5b3128(0x204)?_0x1bd859:null;},_0x2c6900=async _0xcb01d2=>{const _0x5d45f5=_0x2c5b16,_0x43acd8={'mode':_0xcb01d2,'checked_at':_0x575cd7['yRhDo'](now),'expires_at':_0x575cd7['CNEVi'](now(),_0x81f903)};return await _0x575cd7[_0x5d45f5(_0x3ca44d._0xf2670b)](_0x4fe5,{[_0x1554c7]:_0x43acd8}),_0x43acd8;},_0xf9a330=async(_0x257bbb=![])=>{const _0x5ba51b=_0x2c5b16,_0xa755fa=await _0x575cd7['OyXoo'](_0x3aca6f);if(!_0x257bbb&&_0xa755fa?.[_0x5ba51b(0x1e9)]>_0x575cd7[_0x5ba51b(0x208)](now))return _0xa755fa[_0x5ba51b(0x1e2)]==='v1';try{const _0xfc9d52=await _0x41799a(_0x2abdeb+(_0x5ba51b(0x1fb)+'s'),{'method':_0x5ba51b(0x1e3)}),_0x4f59c7=_0xfc9d52?.['contract_ver'+_0x5ba51b(_0x37e366._0x1fe4bc)]===_0x5ba51b(0x1ea)+'1';return await _0x575cd7[_0x5ba51b(0x219)](_0x2c6900,_0x4f59c7?'v1':_0x5ba51b(0x1c3)),_0x4f59c7;}catch(_0x3c3be6){if(Number(_0x3c3be6?.[_0x5ba51b(0x1cc)])===0x137*0x12+0x6*-0x4b2+-0x3f1*-0x2||_0x585429[_0x5ba51b(0x20d)](_0x575cd7[_0x5ba51b(_0x37e366._0x3e340a)](String,_0x3c3be6?.[_0x5ba51b(0x20f)]||'')))return await _0x575cd7[_0x5ba51b(0x1f6)](_0x2c6900,_0x5ba51b(0x1c3)),![];throw _0x3c3be6;}},_0x67ed0f=(_0x5e56ce,_0x37168e,_0x218cac)=>_0x41799a(_0x5e56ce,{'method':_0x2c5b16(0x1ce),'body':_0x37168e,'headers':{'Idempotency-Key':_0x218cac}});return{'probe':_0xf9a330,'clearProbe':()=>_0x4fe5({[_0x1554c7]:null}),'listJobs':_0x74c4f8=>_0x41799a(_0x2abdeb+('/jobs?workfl'+'ow=')+encodeURIComponent(_0x74c4f8),{'method':'GET'}),'nextJob':_0x3d4b72=>_0x41799a(_0x2abdeb+(_0x2c5b16(0x1d0)+_0x2c5b16(0x1c7))+encodeURIComponent(_0x3d4b72),{'method':'GET'}),'claimJob':(_0x16c2a5,_0x1d2874)=>_0x67ed0f(_0x2abdeb+_0x2c5b16(0x1d3)+encodeURIComponent(_0x16c2a5)+'/claim',{},_0x56c1ae(_0x2c5b16(0x1eb),_0x16c2a5+':'+_0x1d2874)),'updateStatus':(_0x18485e,_0x23fc91,_0x2d8da6)=>{const _0xac584c=_0x2c5b16,_0x3af9b5=String(_0x23fc91?.[_0xac584c(0x1cc)]||'');if(_0x3af9b5===_0xac584c(0x20a))return _0x575cd7[_0xac584c(0x1f2)](_0x67ed0f,_0x2abdeb+'/jobs/'+encodeURIComponent(_0x18485e)+_0xac584c(0x1e1),{'reason':_0x23fc91?.['error']||_0xac584c(0x1fc)+'se'},_0x56c1ae(_0xac584c(0x214),_0x18485e+':'+_0x2d8da6+':'+(_0x23fc91?.['error']||_0xac584c(0x214))));return _0x67ed0f(_0x2abdeb+_0xac584c(_0x350453._0x37e8dd)+encodeURIComponent(_0x18485e)+'/status',{'status':_0x3af9b5,..._0x23fc91?.['error']?{'error':String(_0x23fc91[_0xac584c(0x207)])}:{}},_0x56c1ae('status',_0x18485e+':'+_0x3af9b5+':'+(_0x23fc91?.[_0xac584c(0x207)]||'')));},'saveResult':(_0x60d042,_0x5aa46a)=>_0x67ed0f(_0x2abdeb+_0x2c5b16(0x1d3)+encodeURIComponent(_0x60d042[_0x2c5b16(0x21b)])+_0x2c5b16(0x1f5),_0x29576e(_0x60d042),_0x56c1ae('result',_0x60d042[_0x2c5b16(0x21b)]+':'+_0x60d042['kind']+':'+(_0x60d042['filename']||_0x1b8576(_0x60d042[_0x2c5b16(0x1ef)]||_0x60d042[_0x2c5b16(0x1dd)])||_0x5aa46a))),'saveMarketplaceListing':_0x2d3b0c=>{const _0x3b7101=_0x2c5b16,_0x2e381a=_0x4928be(_0x2d3b0c);return _0x67ed0f(_0x2abdeb+('/marketplace'+_0x3b7101(0x1cb)),_0x2e381a,_0x56c1ae(_0x3b7101(0x1f1),_0x2e381a[_0x3b7101(0x1e6)]+':'+_0x2e381a[_0x3b7101(0x1e8)+'ng_id']));},'queueMockups':(_0x3f20a7,_0x2e44c6,_0x83cb2f)=>Promise[_0x2c5b16(0x1f0)]([...new Set(Array['isArray'](_0x3f20a7)?_0x3f20a7[_0x2c5b16(0x1e0)](Boolean):[])]['map'](_0x516941=>_0x67ed0f(_0x2abdeb+'/jobs',{'workflow':_0x2c5b16(0x210),'source':{'type':_0x2c5b16(0x1c9),'id':String(_0x516941)},'options':_0x2e44c6&&typeof _0x2e44c6==='object'?_0x2e44c6:{},'metadata':{'created_by':_0x2c5b16(0x1f9)+_0x2c5b16(0x1d5)},'priority':0x0},_0x56c1ae('mockup-job',_0x516941+':'+_0x83cb2f)))),'getAsset':_0x1a0da0=>_0x41799a(_0x2abdeb+_0x2c5b16(0x20e)+encodeURIComponent(_0x1a0da0),{'method':'GET'})};}_0x58ec98[_0x5a912b(_0x44ddd3._0x3b63aa)+'V1']=Object[_0x5a912b(_0x44ddd3._0x260325)]({'BASE_PATH':_0x2abdeb,'STATE_KEY':_0x1554c7,'createClient':_0xdaeacd,'fingerprint':_0x1b8576,'idempotencyKey':_0x56c1ae,'marketplaceListing':_0x4928be,'resultPayload':_0x29576e});}(globalThis));function _0x631d(_0x4ee27c,_0xe22fa5){const _0x36a02b=_0xbf0f();return _0x631d=function(_0x19c63f,_0xc039d4){_0x19c63f=_0x19c63f-(0x150f+0x8bb+-0xcd*0x23);let _0x220b41=_0x36a02b[_0x19c63f];if(_0x631d['DQjkHL']===undefined){var _0x33d656=function(_0xf1b3f7){const _0x430628='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0xf058d9='',_0x1f67d4='';for(let _0x59a809=0x5*-0x156+-0x29*-0x62+-0x904,_0x1a4ceb,_0x95fb2a,_0x546343=0xdff+-0xe2*-0x29+-0x3231;_0x95fb2a=_0xf1b3f7['charAt'](_0x546343++);~_0x95fb2a&&(_0x1a4ceb=_0x59a809%(-0x248+0x2003+-0x1db7)?_0x1a4ceb*(-0x4d8+-0x4*0x88d+0x274c)+_0x95fb2a:_0x95fb2a,_0x59a809++%(-0x3*-0x1db+-0x43*0x35+-0x429*-0x2))?_0xf058d9+=String['fromCharCode'](-0x1c*0x12f+-0x8fa*-0x2+-0x3*-0x565&_0x1a4ceb>>(-(0x1fa2+0x1*0x25b5+-0x4555)*_0x59a809&0x2675+-0x242f+-0x20*0x12)):0x6e9+0x6*-0x5ed+-0x1ca5*-0x1){_0x95fb2a=_0x430628['indexOf'](_0x95fb2a);}for(let _0x592e4f=-0x1db4+0x686+0x172e,_0x4def70=_0xf058d9['length'];_0x592e4f<_0x4def70;_0x592e4f++){_0x1f67d4+='%'+('00'+_0xf058d9['charCodeAt'](_0x592e4f)['toString'](-0x8d8+-0x1cf8+0x25e0))['slice'](-(0xc4f+0x742*0x5+0x3097*-0x1));}return decodeURIComponent(_0x1f67d4);};_0x631d['OYREAl']=_0x33d656,_0x4ee27c=arguments,_0x631d['DQjkHL']=!![];}const _0x487159=_0x36a02b[-0xe80*0x2+-0x1e66+0x3b66],_0x379521=_0x19c63f+_0x487159,_0x573dc6=_0x4ee27c[_0x379521];return!_0x573dc6?(_0x220b41=_0x631d['OYREAl'](_0x220b41),_0x4ee27c[_0x379521]=_0x220b41):_0x220b41=_0x573dc6,_0x220b41;},_0x631d(_0x4ee27c,_0xe22fa5);}function _0xbf0f(){const _0x37aeff=['zxH0lxyXoG','CxvLDwvK','BgvUz3rO','C3rYAw5N','AgfZ','l2fZC2v0CY8','y29Kzq','Bw9JA3vW','BM93','y2fWDhvYzwrFyxq','ug9KAhvIqNjPzgDL','CMvSzwfZzq','qNjPzgDLihyXignS','Dg9mB3DLCKnHC2u','BgLZDgLUzW','odKWrM5mDgfg','rerMEe4','ChvIx2jYAwrNzv92','AM9Iswq','mZaZotK5mKrtAw5pqW','BgvNywn5','t1rFu1vque9sveve','y2HHCKnVzgvbDa','BwfYA2v0CgXHy2u','B3jRzMXVDZ0','Aw11Ba','yxnZzxq','zxH0zxjUywXFAwq','l2XPC3rPBMDZ','C3rHDhvZ','qNnAyMu','ue9tva','mJaZtfr4BLDd','l2PVyNmVBMv4Dd93','zNjLzxPL','zMLSzw5HBwu','l2PVyNmV','C2LVBG','zwqTyNjPzgDL','DgvYBwLUywW','zNvUy3rPB24','mtyXmZm5muzRqLvoyq','mtm4nteZC1rXEK1P','qvLFreLtqujmruq','yxnZzxrjzhm','AwvUDcbKzxbLBMrL','Bwv0yq','vMvQBeq','4BQNEsdeKEg7PY4','zMLSDgvY','l3jLBgvHC2u','Bw9Kzq','r0vu','odG5mevxvhHNrG','C3rYAw5NAwz5','C291CMnL','ndi4nJv4C1vHqxu','C291CMnLx2XPC3rP','zxHWAxjLC19HDa','yNjPzgDLx2fWAv92','y2XHAw0','lNbUzW','CMvXDwvZDgvKx3DV','CMvZDwX0','yM9KEq','ywXS','BgLZDgLUzY12mG','BxjLCum','ntmWntHbtu1oruy','A2LUza','l3jLC3vSDa','qwntBNa','BMnPzxmGy2JgSgeGXje','BMDFAwq','Cg9KAhvIlxvUAwzP','CMTMBg93CW','l2nHCgfIAwXPDgLL','CNvUBMvYx3jLBgvH','qLjjreDfx1yXx0rj','D0vnuxK','A0LzDeu','mv9ZDgf0zq','AxnbCNjHEq','CMf3x3bHEwXVywq','mJKYqLz5Cwr4','B2jQzwn0','zgf0yvvYBa','mJy5mtLuA1v5tuy','zxjYB3i','rhbKAKe'];_0xbf0f=function(){return _0x37aeff;};return _0xbf0f();}
+(function installPodhubBridgeV1(globalScope) {
+  'use strict';
+
+  const BASE_PATH = '/api/bridge/v1';
+  const STATE_KEY = 'pub_bridge_v1_state';
+  const PROBE_TTL_MS = 5 * 60 * 1000;
+  const DISABLED_CODES = new Set([
+    'CAPABILITY_NOT_SUPPORTED',
+    'BRIDGE_V1_DISABLED',
+    'BRIDGE_GATEWAY_DISABLED'
+  ]);
+
+  const cleanId = value => String(value || '')
+    .trim()
+    .replace(/[^A-Za-z0-9._:-]+/g, '-')
+    .slice(0, 180);
+
+  const idempotencyKey = (scope, id) => `ext-v1:${cleanId(scope)}:${cleanId(id) || 'unknown'}`;
+
+  const fingerprint = value => {
+    const input = typeof value === 'string' ? value : JSON.stringify(value ?? null);
+    let hash = 2166136261;
+    for (let index = 0; index < input.length; index += 1) {
+      hash ^= input.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, '0');
+  };
+
+  const marketplaceListing = payload => {
+    const source = String(payload?.marketplace || payload?.source || '').toLowerCase();
+    const capturedAt = payload?.captured_at || payload?.raw_payload?.captured_at || new Date().toISOString();
+    return {
+      source,
+      source_listing_id: String(payload?.external_id || payload?.source_listing_id || payload?.id || ''),
+      captured_at: capturedAt,
+      listing: {...payload},
+      requested_workflows: Array.isArray(payload?.requested_workflows) ? payload.requested_workflows : [],
+      metadata: {source_page: payload?.source_page || payload?.product_url || null}
+    };
+  };
+
+  const resultPayload = message => ({
+    kind: message.kind,
+    result: message.kind === 'listing'
+      ? (message.body || message.meta || {})
+      : {
+          data_url: message.dataUrl,
+          filename: message.filename || `${message.kind || 'result'}.png`
+        },
+    asset_ids: Array.isArray(message.assetIds) ? message.assetIds : [],
+    metadata: message.meta && typeof message.meta === 'object' ? message.meta : {},
+    terminal: message.terminal === true
+  });
+
+  function createClient({request, storageGet, storageSet, now = () => Date.now()}) {
+    if (typeof request !== 'function' || typeof storageGet !== 'function' || typeof storageSet !== 'function') {
+      throw new Error('Bridge v1 client dependencies chưa đầy đủ.');
+    }
+
+    const readState = async () => {
+      const saved = await storageGet([STATE_KEY]);
+      const value = saved?.[STATE_KEY];
+      return value && typeof value === 'object' ? value : null;
+    };
+
+    const writeState = async mode => {
+      const state = {mode, checked_at: now(), expires_at: now() + PROBE_TTL_MS};
+      await storageSet({[STATE_KEY]: state});
+      return state;
+    };
+
+    const probe = async (force = false) => {
+      const current = await readState();
+      if (!force && current?.expires_at > now()) return current.mode === 'v1';
+      try {
+        const capabilities = await request(`${BASE_PATH}/capabilities`, {method: 'GET'});
+        const supported = capabilities?.contract_version === 'bridge_api_v1';
+        await writeState(supported ? 'v1' : 'legacy');
+        return supported;
+      } catch (error) {
+        if (Number(error?.status) === 404 || DISABLED_CODES.has(String(error?.code || ''))) {
+          await writeState('legacy');
+          return false;
+        }
+        throw error;
+      }
+    };
+
+    const write = (path, body, key) => request(path, {
+      method: 'POST',
+      body,
+      headers: {'Idempotency-Key': key}
+    });
+
+    return {
+      probe,
+      clearProbe: () => storageSet({[STATE_KEY]: null}),
+      listJobs: workflow => request(`${BASE_PATH}/jobs?workflow=${encodeURIComponent(workflow)}`, {method: 'GET'}),
+      nextJob: workflow => request(`${BASE_PATH}/jobs/next?workflow=${encodeURIComponent(workflow)}`, {method: 'GET'}),
+      claimJob: (jobId, installationId) => write(
+        `${BASE_PATH}/jobs/${encodeURIComponent(jobId)}/claim`,
+        {},
+        idempotencyKey('claim', `${jobId}:${installationId}`)
+      ),
+      updateStatus: (jobId, body, installationId) => {
+        const status = String(body?.status || '');
+        if (status === 'queued') {
+          return write(
+            `${BASE_PATH}/jobs/${encodeURIComponent(jobId)}/release`,
+            {reason: body?.error || 'runner_release'},
+            idempotencyKey('release', `${jobId}:${installationId}:${body?.error || 'release'}`)
+          );
+        }
+        return write(
+          `${BASE_PATH}/jobs/${encodeURIComponent(jobId)}/status`,
+          {status, ...(body?.error ? {error: String(body.error)} : {})},
+          idempotencyKey('status', `${jobId}:${status}:${body?.error || ''}`)
+        );
+      },
+      saveResult: (message, installationId) => write(
+        `${BASE_PATH}/jobs/${encodeURIComponent(message.jobId)}/result`,
+        resultPayload(message),
+        idempotencyKey('result', `${message.jobId}:${message.kind}:${message.filename || fingerprint(message.body || message.meta) || installationId}`)
+      ),
+      saveMarketplaceListing: payload => {
+        const body = marketplaceListing(payload);
+        return write(
+          `${BASE_PATH}/marketplace/listings`,
+          body,
+          idempotencyKey('listing-v2', `${body.source}:${body.source_listing_id}`)
+        );
+      },
+      queueMockups: (assetIds, options, installationId) => Promise.all(
+        [...new Set(Array.isArray(assetIds) ? assetIds.filter(Boolean) : [])].map(assetId => write(
+          `${BASE_PATH}/jobs`,
+          {
+            workflow: 'mockup',
+            source: {type: 'asset', id: String(assetId)},
+            options: options && typeof options === 'object' ? options : {},
+            metadata: {created_by: 'podhub-unified-bridge'},
+            priority: 0
+          },
+          idempotencyKey('mockup-job', `${assetId}:${installationId}`)
+        ))
+      ),
+      getAsset: assetId => request(`${BASE_PATH}/assets/${encodeURIComponent(assetId)}`, {method: 'GET'})
+    };
+  }
+
+  globalScope.PodhubBridgeV1 = Object.freeze({
+    BASE_PATH,
+    STATE_KEY,
+    createClient,
+    fingerprint,
+    idempotencyKey,
+    marketplaceListing,
+    resultPayload
+  });
+})(globalThis);
