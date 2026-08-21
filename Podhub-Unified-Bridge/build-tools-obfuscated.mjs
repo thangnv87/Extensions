@@ -7,10 +7,29 @@ import JavaScriptObfuscator from 'javascript-obfuscator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const sourceDir = path.join(__dirname, 'Podhub-GPTs-Bridge-Clear');
-const outputDir = path.join(__dirname, 'Podhub-GPTs-Bridge-Obfuscated');
+const profileId = String(process.argv[2] || 'tools').toLowerCase();
+const profiles = {
+  tools: {
+    sourceFolder: 'Podhub-GPTs-Bridge-Clear',
+    outputFolder: 'Podhub-GPTs-Bridge-Obfuscated',
+    expectedName: 'Podhub GPTs Bridge',
+    expectedOrigin: 'https://tools.podhub.space',
+    zipPrefix: 'Podhub-GPTs-Bridge'
+  },
+  ex: {
+    sourceFolder: 'Podhub-GPTs-Bridge-EX-Clear',
+    outputFolder: 'Podhub-GPTs-Bridge-EX-Obfuscated',
+    expectedName: 'Podhub GPTs Bridge EX',
+    expectedOrigin: 'https://ex.podhub.space',
+    zipPrefix: 'Podhub-GPTs-Bridge-EX'
+  }
+};
+const profile = profiles[profileId];
+if (!profile) throw new Error(`[release] Unknown profile: ${profileId}`);
+const sourceDir = path.join(__dirname, profile.sourceFolder);
+const outputDir = path.join(__dirname, profile.outputFolder);
 const manifest = JSON.parse(fs.readFileSync(path.join(sourceDir, 'manifest.json'), 'utf8'));
-const zipName = `Podhub-GPTs-Bridge-v${manifest.version}-Obfuscated.zip`;
+const zipName = `${profile.zipPrefix}-v${manifest.version}-Obfuscated.zip`;
 const zipPath = path.join(__dirname, zipName);
 const checksumPath = `${zipPath}.sha256`;
 
@@ -96,18 +115,25 @@ function scanSecrets(files) {
   }
 }
 
-if (manifest.name !== 'Podhub GPTs Bridge' || manifest.version !== '0.1.9.5') {
+if (manifest.name !== profile.expectedName || manifest.version !== '0.1.9.5') {
   fail(`Unexpected manifest identity: ${manifest.name} v${manifest.version}`);
 }
 
 const sourceText = [...javascriptFiles, ...staticFiles]
   .map(file => fs.readFileSync(sourcePath(file), 'utf8'))
   .join('\n');
-if (!sourceText.includes('https://tools.podhub.space')) {
-  fail('Tools origin is missing from the clear source');
+if (!sourceText.includes(profile.expectedOrigin)) {
+  fail(`${profile.expectedOrigin} is missing from the clear source`);
 }
-if (/https:\/\/(?:api\.fiercetee\.com|podhub\.space)(?:\/|['"])/.test(sourceText)) {
-  fail('A non-Tools production origin was found in the clear source');
+const productionOrigins = [
+  'https://tools.podhub.space',
+  'https://ex.podhub.space',
+  'https://api.fiercetee.com',
+  'https://podhub.space'
+];
+const wrongOrigin = productionOrigins.find(origin => origin !== profile.expectedOrigin && sourceText.includes(origin));
+if (wrongOrigin) {
+  fail(`Unexpected production origin found in ${profileId} source: ${wrongOrigin}`);
 }
 
 for (const file of javascriptFiles) {

@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Podhub GPTs Bridge EX",
+  "version": "0.1.9.5",
+  "version_name": "0.1.9.5",
+  "description": "Kết nối EX Podhub với Custom GPTs để xử lý Clone, Redesign, Mockup và Listing.",
+  "permissions": ["storage", "tabs", "windows", "downloads"],
+  "host_permissions": [
+    "https://ex.podhub.space/*",
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://*.openai.com/*",
+    "https://*.oaiusercontent.com/*",
+    "https://*.oaistatic.com/*",
+    "https://*.blob.core.windows.net/*",
+    "https://www.etsy.com/*",
+    "https://*.etsy.com/*",
+    "https://*.etsystatic.com/*",
+    "https://www.amazon.com/*",
+    "https://*.amazon.com/*",
+    "https://*.media-amazon.com/*",
+    "https://*.ssl-images-amazon.com/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Podhub GPTs Bridge EX",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content.js", "ui-fix.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.etsy.com/*", "https://*.etsy.com/*", "https://www.amazon.com/*", "https://*.amazon.com/*"],
+      "js": ["marketplace.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
