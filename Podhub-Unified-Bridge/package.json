@@ -6,8 +6,10 @@
   "scripts": {
     "build": "npm run build:release",
     "build:release": "node build-release.mjs",
+    "build:tools-obfuscated": "node build-tools-obfuscated.mjs",
     "check": "node --check service-worker.js && node --check bridge-v1-client.js && node --check background-source.js && node --check popup.js && node --check content.js && node --check marketplace.js && node --check ui-fix.js",
-    "test": "node --test test/*.test.cjs"
+    "test": "node --test test/bridge-v1-client.test.cjs",
+    "test:tools-obfuscated": "node --test test/tools-obfuscated.test.cjs"
   },
   "devDependencies": {
     "javascript-obfuscator": "4.1.1"
